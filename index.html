@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Fun Finder | St. Augustine & Jacksonville</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="container header-content">
+        <div class="brand">
+          <div class="brand-mark">FF</div>
+          <div>
+            <div class="brand-title">Family Fun Finder</div>
+            <div class="brand-subtitle">St. Augustine & Jacksonville</div>
+          </div>
+        </div>
+        <nav class="nav-links" aria-label="Primary">
+          <a class="active" href="index.html">Home</a>
+          <a href="events.html">Events</a>
+          <a href="submit.html">Submit</a>
+          <a href="about.html">About</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div>
+            <span class="tag">Weekly picks + calm planning</span>
+            <h1>Family-friendly events, curated for bright days and easy nights.</h1>
+            <p>
+              We gather public events, rewrite descriptions, and keep only what feels truly helpful
+              for parents. Choose a region to see what’s happening nearby.
+            </p>
+            <div class="toggle" role="tablist" aria-label="Region">
+              <button class="active" data-region="St. Augustine" type="button">St. Augustine</button>
+              <button data-region="Jacksonville" type="button">Jacksonville</button>
+            </div>
+          </div>
+          <div class="hero-card">
+            <p class="pill">This week</p>
+            <h3 id="featured-title">Family nature walk</h3>
+            <p class="event-meta" id="featured-meta">Saturday • 9:30 AM • Local park</p>
+            <p id="featured-description">
+              Calm mornings with space to explore. We’ll update this spot with our top pick each
+              week.
+            </p>
+            <div class="event-actions">
+              <button class="primary-button" type="button" data-action="view-events">View all events</button>
+              <button class="secondary-button" type="button" data-action="save-featured">Save</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2>Weekly featured events</h2>
+            <p>Hand-picked highlights pulled from our curated list.</p>
+          </div>
+          <div class="events-grid" id="featured-events"></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2>Browse by category</h2>
+            <p>Quick paths for the most-requested experiences.</p>
+          </div>
+          <div class="grid">
+            <article class="card category-card">Outdoor adventures</article>
+            <article class="card category-card">Storytime & learning</article>
+            <article class="card category-card">Active play</article>
+            <article class="card category-card">Food & fun</article>
+            <article class="card category-card">Museums & history</article>
+            <article class="card category-card">Arts & crafts</article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-header">
+            <h2>Community partners</h2>
+            <p>Reserved spots for local camps, classes, and family-friendly businesses.</p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <h3>Ad spot #1</h3>
+              <p>Highlight a summer camp or seasonal program here.</p>
+            </article>
+            <article class="card">
+              <h3>Ad spot #2</h3>
+              <p>Share a special offer or new family service.</p>
+            </article>
+            <article class="card">
+              <h3>Ad spot #3</h3>
+              <p>Link to a local partner for parents and kids.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container newsletter">
+          <div>
+            <h2>Get the Friday roundup</h2>
+            <p>One gentle email each week with the top picks for both cities.</p>
+          </div>
+          <form>
+            <input type="email" placeholder="you@email.com" aria-label="Email" />
+            <button class="primary-button" type="submit">Join free</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <div class="brand-title">Family Fun Finder</div>
+          <div class="brand-subtitle">Curated weekly in Northeast Florida</div>
+        </div>
+        <div>
+          <p>Questions or submissions?</p>
+          <a href="mailto:hello@familyfunfinder.com">hello@familyfunfinder.com</a>
+        </div>
+      </div>
+    </footer>
+
+    <script type="module" src="scripts/app.js"></script>
+  </body>
+</html>

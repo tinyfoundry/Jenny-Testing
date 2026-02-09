@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Family Fun Finder Event Schemas",
+  "definitions": {
+    "event": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "start_date",
+        "city",
+        "location_name",
+        "category",
+        "curated_description",
+        "source",
+        "source_attribution",
+        "canonical_url",
+        "status"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "start_date": { "type": "string", "format": "date" },
+        "end_date": { "type": ["string", "null"], "format": "date" },
+        "time": { "type": ["string", "null"] },
+        "city": { "enum": ["St. Augustine", "Jacksonville"] },
+        "location_name": { "type": "string" },
+        "category": { "enum": ["Outdoor", "Storytime", "Learning", "Active", "Food & Fun"] },
+        "age_range": { "type": "string" },
+        "curated_description": { "type": "string", "minLength": 40 },
+        "source": { "enum": ["facebook", "user"] },
+        "source_attribution": { "type": "string" },
+        "canonical_url": { "type": "string", "format": "uri" },
+        "status": { "enum": ["pending", "approved"] }
+      }
+    }
+  },
+  "properties": {
+    "events_curated": {
+      "type": "object",
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/event" }
+        }
+      }
+    },
+    "events_pending": {
+      "type": "object",
+      "properties": {
+        "generated_at": { "type": "string", "format": "date-time" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/event" }
+        }
+      }
+    }
+  }
+}

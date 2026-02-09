@@ -1,0 +1,38 @@
+name: Weekly event update
+
+on:
+  schedule:
+    - cron: "0 9 * * 1"
+  workflow_dispatch:
+
+jobs:
+  refresh-events:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch mock events
+        run: node scripts/fetch_facebook_events.js
+
+      - name: Curate events
+        run: node scripts/curate_events.js
+
+      - name: Commit updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git add data/events_raw.json data/events_pending.json data/events_curated.json
+          git commit -m "chore: weekly event refresh [skip ci]"
+          git push

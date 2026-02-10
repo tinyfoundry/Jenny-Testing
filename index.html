@@ -31,7 +31,18 @@
 
     <section id="modules" class="card hidden">
       <h2>Study Modules</h2>
-      <div id="moduleList"></div>
+      <p class="sub">Each module has 10 independent 4–5 minute levels (flashcard + mini-check).</p>
+      <div id="moduleList" class="grid two"></div>
+    </section>
+
+    <section id="moduleWorkbench" class="card hidden">
+      <div class="quiz-head">
+        <h2 id="workbenchTitle">Module Study Tools</h2>
+        <div id="workbenchMeta"></div>
+      </div>
+      <div class="progress"><div id="moduleProgressFill" class="progress-fill"></div></div>
+      <div id="levelCards" class="grid two"></div>
+      <div id="levelTool" class="hidden"></div>
     </section>
 
     <section id="practice" class="card hidden">
@@ -42,7 +53,7 @@
       </label>
       <label>Question Count
         <select id="practiceCount">
-          <option>5</option><option selected>10</option><option>15</option>
+          <option selected>10</option><option>25</option><option>50</option>
         </select>
       </label>
       <button id="startPractice" class="action">Start Practice Quiz</button>
@@ -50,7 +61,7 @@
 
     <section id="exam" class="card hidden">
       <h2>Exam Mode</h2>
-      <p>Timed simulation with no immediate feedback; final score + domain breakdown.</p>
+      <p>Timed simulation with no immediate feedback; submit auto-advances to next question.</p>
       <label>Exam Size
         <select id="examSize">
           <option value="mini">Mini (15 questions / 20 min)</option>

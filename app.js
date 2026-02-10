@@ -1,19 +1,27 @@
 const state = {
   contentMap: null,
   questionBank: [],
-  history: [],
   mode: null,
   quiz: null,
   timerId: null,
   secondsLeft: 0,
   navStack: ["dashboard"],
+  activeModuleId: null,
 };
 
 const STORAGE_KEY = "dcfPrepV1";
-const defaultProgress = { completedModules: {}, domainAccuracy: {}, weakDomains: [], examHistory: [], totalAnswered: 0, totalCorrect: 0 };
+const defaultProgress = {
+  completedModules: {},
+  moduleProgress: {},
+  domainAccuracy: {},
+  weakDomains: [],
+  examHistory: [],
+  totalAnswered: 0,
+  totalCorrect: 0,
+};
 
 const $ = (id) => document.getElementById(id);
-const views = ["dashboard","modules","practice","exam","adaptive","quiz","results"];
+const views = ["dashboard", "modules", "moduleWorkbench", "practice", "exam", "adaptive", "quiz", "results"];
 
 init();
 
@@ -60,14 +68,22 @@ function getProgress() {
   try { return { ...defaultProgress, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") }; }
   catch { return { ...defaultProgress }; }
 }
-
 function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+
+function moduleLikelyPass(moduleId, p) {
+  const m = p.moduleProgress[moduleId] || {};
+  const completed = Object.values(m).filter(Boolean).length;
+  return Math.round((completed / 10) * 100);
+}
 
 function updateTopScores() {
   const p = getProgress();
   const readiness = p.totalAnswered ? Math.round((p.totalCorrect / p.totalAnswered) * 100) : 0;
-  const consistencyBoost = Math.min(15, (p.examHistory.slice(-5).filter(x => x.score >= 70).length * 3));
-  const pass = Math.max(0, Math.min(99, Math.round(readiness * 0.85 + consistencyBoost)));
+  const moduleAvg = state.contentMap?.recommended_learning_path?.length
+    ? Math.round(state.contentMap.recommended_learning_path.reduce((acc, m) => acc + moduleLikelyPass(m.module, p), 0) / state.contentMap.recommended_learning_path.length)
+    : 0;
+  const consistencyBoost = Math.min(12, (p.examHistory.slice(-5).filter(x => x.score >= 70).length * 2));
+  const pass = Math.max(0, Math.min(99, Math.round(readiness * 0.65 + moduleAvg * 0.25 + consistencyBoost)));
   $("readinessScore").textContent = `${readiness}%`;
   $("passLikelihood").textContent = `${pass}%`;
 }
@@ -78,7 +94,7 @@ function renderOverview() {
   const weak = p.weakDomains.length ? p.weakDomains.join(", ") : "None yet";
   $("overview").innerHTML = `
     <h3>Progress Overview</h3>
-    <p><strong>Completed Modules:</strong> ${completed}</p>
+    <p><strong>Completed Modules:</strong> ${completed}/${state.contentMap.recommended_learning_path.length}</p>
     <p><strong>Total Questions Answered:</strong> ${p.totalAnswered}</p>
     <p><strong>Weak Areas:</strong> ${weak}</p>
     <p class="small">Data is stored in local browser storage for easy static deployment.</p>
@@ -90,24 +106,126 @@ function renderModules() {
   const wrap = $("moduleList");
   wrap.innerHTML = "";
   state.contentMap.recommended_learning_path.forEach((m, idx) => {
-    const done = !!p.completedModules[m.module];
+    const doneLevels = Object.values(p.moduleProgress[m.module] || {}).filter(Boolean).length;
+    const likely = moduleLikelyPass(m.module, p);
     const div = document.createElement("article");
-    div.className = "module";
+    div.className = "module module-card";
     div.innerHTML = `
       <h3>${idx + 1}. ${m.name}</h3>
-      <p><strong>Estimated:</strong> ${m.estimated_minutes} min</p>
+      <p><strong>Total time:</strong> ~45 min • <strong>10 levels</strong> (~4–5 min each)</p>
       <p>${m.flags.includes("high_risk") ? '<span class="pill risk">High-risk</span>' : ''}
          ${m.flags.includes("memorization_heavy") ? '<span class="pill memo">Memorization-heavy</span>' : ''}
          ${m.flags.includes("scenario_based") ? '<span class="pill scenario">Scenario-based</span>' : ''}</p>
-      <button class="ghost" data-mod="${m.module}">${done ? "Mark Incomplete" : "Mark Complete"}</button>
+      <p class="small"><strong>Progress:</strong> ${doneLevels}/10 levels • <strong>Module knowledge:</strong> ${likely}%</p>
+      <button class="action" data-open-module="${m.module}">Open Study Tools</button>
     `;
-    div.querySelector("button").addEventListener("click", (e) => {
-      const id = e.target.dataset.mod;
-      const prog = getProgress();
-      prog.completedModules[id] = !prog.completedModules[id];
-      saveProgress(prog); renderModules(); renderOverview(); updateTopScores();
-    });
+    div.querySelector("button").addEventListener("click", (e) => openModuleWorkbench(e.target.dataset.openModule));
     wrap.appendChild(div);
+  });
+}
+
+function createLevelsForModule(moduleId) {
+  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
+  const domain = state.contentMap.domains.find(d => d.id === domainMap[moduleId]) || state.contentMap.domains[0];
+  const objectives = domain.topics.flatMap(t => t.subtopics.flatMap(s => s.learning_objectives.map(lo => ({ topic: t.name, subtopic: s.name, lo }))));
+  const levels = [];
+  for (let i = 0; i < 10; i++) {
+    const base = objectives[i % objectives.length];
+    const distractor = objectives[(i + 3) % objectives.length]?.lo || objectives[0].lo;
+    levels.push({
+      id: `L${i + 1}`,
+      title: `Level ${i + 1}`,
+      est: "4–5 min",
+      flashFront: base.topic,
+      flashBack: base.lo,
+      miniQ: {
+        prompt: `Which statement aligns with this level focus (${base.subtopic})?`,
+        choices: [base.lo, distractor],
+        correct: 0
+      }
+    });
+  }
+  return levels;
+}
+
+function openModuleWorkbench(moduleId) {
+  state.activeModuleId = moduleId;
+  const mod = state.contentMap.recommended_learning_path.find(x => x.module === moduleId);
+  const p = getProgress();
+  const levels = createLevelsForModule(moduleId);
+  const doneLevels = Object.values(p.moduleProgress[moduleId] || {}).filter(Boolean).length;
+  $("workbenchTitle").textContent = `${mod.name} • Study Tools`;
+  $("workbenchMeta").textContent = `10 levels • ~45 minutes total • knowledge ${moduleLikelyPass(moduleId, p)}%`;
+  $("moduleProgressFill").style.width = `${(doneLevels / 10) * 100}%`;
+
+  $("levelCards").innerHTML = levels.map((l, idx) => {
+    const done = !!(p.moduleProgress[moduleId] || {})[l.id];
+    return `<article class="module level-card">
+      <h4>${l.title}</h4>
+      <p class="small">${l.est}</p>
+      <p class="small">Flashcard + mini-check</p>
+      <p>${done ? '<span class="pill scenario">Completed</span>' : '<span class="pill">Not started</span>'}</p>
+      <button class="ghost" data-level="${idx}">Start ${l.title}</button>
+    </article>`;
+  }).join("");
+
+  document.querySelectorAll("[data-level]").forEach(btn => btn.addEventListener("click", (e) => openLevelTool(levels[Number(e.target.dataset.level)])));
+  $("levelTool").classList.add("hidden");
+  show("moduleWorkbench");
+}
+
+function openLevelTool(level) {
+  const host = $("levelTool");
+  host.classList.remove("hidden");
+  host.innerHTML = `
+    <hr />
+    <h3>${level.title}</h3>
+    <p class="small">Tool 1: Flashcard (click to flip)</p>
+    <button id="flashCard" class="flashcard" data-side="front"><strong>${level.flashFront}</strong></button>
+    <p class="small">Tool 2: Mini-check</p>
+    <p><strong>${level.miniQ.prompt}</strong></p>
+    ${level.miniQ.choices.map((c, i) => `<label class="choice"><input type="radio" name="lvlMini" value="${i}"/> ${c}</label>`).join("")}
+    <div class="row">
+      <button id="submitLevel" class="action">Submit Level Check</button>
+    </div>
+    <div id="levelFeedback"></div>
+  `;
+
+  $("flashCard").addEventListener("click", () => {
+    const card = $("flashCard");
+    const side = card.dataset.side;
+    if (side === "front") {
+      card.dataset.side = "back";
+      card.innerHTML = `<span>${level.flashBack}</span>`;
+      card.classList.add("flipped");
+    } else {
+      card.dataset.side = "front";
+      card.innerHTML = `<strong>${level.flashFront}</strong>`;
+      card.classList.remove("flipped");
+    }
+  });
+
+  $("submitLevel").addEventListener("click", () => {
+    const picked = document.querySelector("input[name='lvlMini']:checked");
+    if (!picked) {
+      $("levelFeedback").innerHTML = `<p class="feedback-no">Pick an answer before submitting.</p>`;
+      return;
+    }
+    const correct = Number(picked.value) === level.miniQ.correct;
+    const p = getProgress();
+    p.moduleProgress[state.activeModuleId] = p.moduleProgress[state.activeModuleId] || {};
+    if (correct) p.moduleProgress[state.activeModuleId][level.id] = true;
+
+    const completedCount = Object.values(p.moduleProgress[state.activeModuleId]).filter(Boolean).length;
+    if (completedCount >= 10) p.completedModules[state.activeModuleId] = true;
+
+    saveProgress(p);
+    updateTopScores();
+    renderOverview();
+    renderModules();
+    openModuleWorkbench(state.activeModuleId);
+
+    $("levelFeedback").innerHTML = `<p class="${correct ? "feedback-ok" : "feedback-no"}">${correct ? "Great work. Level completed." : "Not quite. Review flashcard and retry this level."}</p>`;
   });
 }
 
@@ -134,7 +252,6 @@ function pickQuestions({ mode, count, domain }) {
       return (aw - bw) || (diffRank[b.difficulty] - diffRank[a.difficulty]);
     });
   } else if (mode === "exam") {
-    // lightweight domain weighting
     const weights = { D1: 0.2, D2: 0.2, D3: 0.25, D4: 0.35 };
     const picked = [];
     Object.entries(weights).forEach(([d, w]) => {
@@ -168,7 +285,7 @@ function startAdaptive() {
 
 function startQuiz({ mode, title, questions, timedMinutes = 0 }) {
   state.mode = mode;
-  state.quiz = { title, questions, idx: 0, answers: {}, checked: false, startTs: Date.now() };
+  state.quiz = { title, questions, idx: 0, answers: {}, checked: false };
   $("quizTitle").textContent = title;
   show("quiz");
   if (timedMinutes) startTimer(timedMinutes * 60); else stopTimer();
@@ -182,7 +299,6 @@ function startTimer(seconds) {
   tick();
   state.timerId = setInterval(tick, 1000);
 }
-
 function tick() {
   const m = String(Math.floor(state.secondsLeft / 60)).padStart(2, "0");
   const s = String(state.secondsLeft % 60).padStart(2, "0");
@@ -190,7 +306,6 @@ function tick() {
   if (state.secondsLeft <= 0) { finishQuiz(); return; }
   state.secondsLeft -= 1;
 }
-
 function stopTimer() {
   if (state.timerId) clearInterval(state.timerId);
   state.timerId = null;
@@ -199,7 +314,6 @@ function stopTimer() {
 
 function renderQuestion() {
   const q = state.quiz.questions[state.quiz.idx];
-  state.quiz.checked = false;
   $("feedback").innerHTML = "";
   $("nextQuestion").classList.add("hidden");
   $("finishQuiz").classList.toggle("hidden", state.quiz.idx < state.quiz.questions.length - 1);
@@ -216,7 +330,6 @@ function selectedAnswers() {
   const inputs = [...document.querySelectorAll(`input[name='q_${q.id}']:checked`)];
   return inputs.map(i => Number(i.value)).sort((a, b) => a - b);
 }
-
 function arraysEqual(a, b) {
   if (a.length !== b.length) return false;
   return a.every((x, i) => x === b[i]);
@@ -225,23 +338,30 @@ function arraysEqual(a, b) {
 function submitAnswer() {
   const q = state.quiz.questions[state.quiz.idx];
   const picked = selectedAnswers();
+  if (!picked.length) {
+    $("feedback").innerHTML = `<p class="feedback-no">Please pick an answer before submitting.</p>`;
+    return;
+  }
+
   state.quiz.answers[q.id] = picked;
   const correct = arraysEqual([...q.correctAnswers].sort((a, b) => a - b), picked);
 
-  if (state.mode !== "exam") {
-    const wrongDetails = q.choices.map((_, i) => {
-      if (q.correctAnswers.includes(i)) return `<li><strong>${q.choices[i]}</strong>: Correct choice per source summary.</li>`;
-      return `<li><strong>${q.choices[i]}</strong>: ${q.whyWrong[i] || "Not aligned with source logic."}</li>`;
-    }).join("");
-
-    $("feedback").innerHTML = `
-      <p class="${correct ? "feedback-ok" : "feedback-no"}"><strong>${correct ? "Correct" : "Incorrect"}</strong></p>
-      <p>${q.explanation}</p>
-      <details><summary>Why each option is right/wrong</summary><ul>${wrongDetails}</ul></details>
-    `;
+  if (state.mode === "exam") {
+    if (state.quiz.idx < state.quiz.questions.length - 1) nextQuestion();
+    return;
   }
 
-  state.quiz.checked = true;
+  const wrongDetails = q.choices.map((_, i) => {
+    if (q.correctAnswers.includes(i)) return `<li><strong>${q.choices[i]}</strong>: Correct choice per source summary.</li>`;
+    return `<li><strong>${q.choices[i]}</strong>: ${q.whyWrong[i] || "Not aligned with source logic."}</li>`;
+  }).join("");
+
+  $("feedback").innerHTML = `
+    <p class="${correct ? "feedback-ok" : "feedback-no"}"><strong>${correct ? "Correct" : "Incorrect"}</strong></p>
+    <p>${q.explanation}</p>
+    <details><summary>Why each option is right/wrong</summary><ul>${wrongDetails}</ul></details>
+  `;
+
   if (state.quiz.idx < state.quiz.questions.length - 1) $("nextQuestion").classList.remove("hidden");
 }
 
@@ -292,6 +412,7 @@ function finishQuiz() {
   `;
 
   renderOverview();
+  renderModules();
   updateTopScores();
   show("results");
 }

@@ -1,6 +1,6 @@
 # DCF Exam Prep v1 (Static Frontend)
 
-This repository now serves a static, GitHub/Vercel-friendly DCF exam-prep app from the root path, built from uploaded source PDFs only.
+This folder contains a static, GitHub/Vercel-friendly DCF exam-prep app built from uploaded source PDFs only.
 
 ## What is included
 
@@ -61,10 +61,10 @@ python3 -m http.server 8000
 
 Open:
 
-- `http://localhost:8000/`
+- `http://localhost:8000/dcf-prep/`
 
 ## Deploy as static site
 
-- **GitHub Pages**: publish the repository root (site loads at `/`).
+- **GitHub Pages**: publish root, then browse `/dcf-prep/`.
 - **Vercel**: import repo, no build step required for this folder.
 

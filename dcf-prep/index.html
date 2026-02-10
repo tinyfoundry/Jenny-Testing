@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DCF Exam Prep v1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button id="backBtn" class="ghost">← Back</button>
+    <div class="brand">DCF Exam Prep</div>
+    <div class="scorebox">
+      <div>Readiness: <strong id="readinessScore">0%</strong></div>
+      <div>Likelihood to Pass: <strong id="passLikelihood">0%</strong></div>
+    </div>
+  </header>
+
+  <main id="app" class="container">
+    <section id="dashboard" class="card">
+      <h1>Dashboard</h1>
+      <p class="sub">Study modules, mini quizzes, full exam simulation, and adaptive practice.</p>
+      <div class="grid two">
+        <button data-view="modules" class="action">Study Modules</button>
+        <button data-view="practice" class="action">Practice Mode</button>
+        <button data-view="exam" class="action">Exam Mode (Mini / Full)</button>
+        <button data-view="adaptive" class="action">Adaptive Mode</button>
+      </div>
+      <div id="overview"></div>
+    </section>
+
+    <section id="modules" class="card hidden">
+      <h2>Study Modules</h2>
+      <div id="moduleList"></div>
+    </section>
+
+    <section id="practice" class="card hidden">
+      <h2>Practice Mode</h2>
+      <p>Topic-based quizzes with immediate feedback and full rationale.</p>
+      <label>Domain
+        <select id="practiceDomain"></select>
+      </label>
+      <label>Question Count
+        <select id="practiceCount">
+          <option>5</option><option selected>10</option><option>15</option>
+        </select>
+      </label>
+      <button id="startPractice" class="action">Start Practice Quiz</button>
+    </section>
+
+    <section id="exam" class="card hidden">
+      <h2>Exam Mode</h2>
+      <p>Timed simulation with no immediate feedback; final score + domain breakdown.</p>
+      <label>Exam Size
+        <select id="examSize">
+          <option value="mini">Mini (15 questions / 20 min)</option>
+          <option value="full">Full (30 questions / 45 min)</option>
+        </select>
+      </label>
+      <button id="startExam" class="action danger">Start Exam</button>
+      <div id="timer" class="timer hidden"></div>
+    </section>
+
+    <section id="adaptive" class="card hidden">
+      <h2>Adaptive Mode</h2>
+      <p>Difficulty rises after streaks; weak domains are re-surfaced automatically.</p>
+      <button id="startAdaptive" class="action">Start Adaptive Session</button>
+      <p id="adaptiveInfo" class="sub"></p>
+    </section>
+
+    <section id="quiz" class="card hidden">
+      <div class="quiz-head">
+        <h2 id="quizTitle">Quiz</h2>
+        <div id="quizMeta"></div>
+      </div>
+      <div id="questionWrap"></div>
+      <div class="row">
+        <button id="submitAnswer" class="action">Submit</button>
+        <button id="nextQuestion" class="ghost hidden">Next</button>
+        <button id="finishQuiz" class="danger hidden">Finish</button>
+      </div>
+      <div id="feedback"></div>
+    </section>
+
+    <section id="results" class="card hidden">
+      <h2>Results & Review</h2>
+      <div id="resultsBody"></div>
+      <button id="toDashboard" class="action">Back to Dashboard</button>
+    </section>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>

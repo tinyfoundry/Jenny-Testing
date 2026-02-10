@@ -102,6 +102,90 @@ function renderOverview() {
   `;
 }
 
+function mapModuleToDomain(moduleId) {
+  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
+  return domainMap[moduleId] || "D1";
+}
+
+function buildModuleBlueprint(moduleId) {
+  const domainId = mapModuleToDomain(moduleId);
+  const domain = state.contentMap.domains.find(d => d.id === domainId) || state.contentMap.domains[0];
+
+  const units = domain.topics.flatMap(topic =>
+    topic.subtopics.map(sub => ({
+      topic: topic.name,
+      subtopic: sub.name,
+      objectives: sub.learning_objectives,
+      description: `Focus: ${topic.name} → ${sub.name}`,
+    }))
+  );
+
+  const levels = [];
+  for (let i = 0; i < 10; i++) {
+    if (i < units.length) {
+      levels.push({
+        levelNum: i + 1,
+        title: `Level ${i + 1}`,
+        description: units[i].description,
+        units: [units[i]],
+      });
+    } else {
+      const a = units[i % units.length];
+      const b = units[(i + 1) % units.length];
+      levels.push({
+        levelNum: i + 1,
+        title: `Level ${i + 1}`,
+        description: `Spiral review: ${a.subtopic} + ${b.subtopic}`,
+        units: [a, b],
+      });
+    }
+  }
+  return levels;
+}
+
+function exampleFromObjective(objective) {
+  const o = objective.toLowerCase();
+  if (o.includes("report")) return "Example: A staff member observes concerning signs, records objective details, and uses an approved hotline method immediately.";
+  if (o.includes("checklist")) return "Example: During free play, the teacher marks whether target skills were observed instead of writing a long narrative.";
+  if (o.includes("anecdotal")) return "Example: Right after circle time, the teacher writes a short factual note describing exactly what occurred.";
+  if (o.includes("running record")) return "Example: For 10 minutes, the teacher documents behavior in sequence as it happens without interpretation.";
+  if (o.includes("referral")) return "Example: After repeated observations and documentation, staff discuss concerns with family and connect them with evaluation services.";
+  if (o.includes("training")) return "Example: A newly hired staff member starts required training within the expected timeline and tracks completion.";
+  if (o.includes("inspection") || o.includes("safety")) return "Example: Opening staff complete daily indoor/outdoor safety checks and remove hazards before children arrive.";
+  return "Example: In daily care, staff apply this concept using objective observation, clear communication, and timely action when concerns appear.";
+}
+
+function createLevelDeck(moduleId, levelNum) {
+  const blueprint = buildModuleBlueprint(moduleId);
+  const level = blueprint[levelNum - 1];
+  const objectivePool = level.units.flatMap(u => u.objectives.map(o => ({ ...u, objective: o })));
+
+  const cardCount = Math.min(8, Math.max(5, objectivePool.length * 2));
+  const cards = Array.from({ length: cardCount }).map((_, i) => {
+    const obj = objectivePool[i % objectivePool.length];
+    return {
+      title: `${obj.topic} • ${obj.subtopic}`,
+      frontBody: obj.objective,
+      backTitle: "Example in practice",
+      backBody: exampleFromObjective(obj.objective),
+    };
+  });
+
+  const quiz = cards.map((card, i) => {
+    const d1 = cards[(i + 1) % cards.length].frontBody;
+    const d2 = cards[(i + 2) % cards.length].frontBody;
+    const d3 = cards[(i + 3) % cards.length].frontBody;
+    const choices = shuffle([card.frontBody, d1, d2, d3]);
+    return {
+      prompt: `Which definition best matches this focus area: ${card.title}?`,
+      choices,
+      correctIndex: choices.indexOf(card.frontBody),
+    };
+  });
+
+  return { level, cards, quiz };
+}
+
 function renderModules() {
   const p = getProgress();
   const wrap = $("moduleList");
@@ -114,7 +198,7 @@ function renderModules() {
     div.innerHTML = `
       <h3>${idx + 1}. ${m.name}</h3>
       <p><strong>Total time:</strong> ~45 min • <strong>10 levels</strong></p>
-      <p class="small">Per level: Tool 1 (10 flashcards) → Tool 2 (10-question level check)</p>
+      <p class="small">Per level: Tool 1 (flashcards) → Tool 2 (level check)</p>
       <p>${m.flags.includes("high_risk") ? '<span class="pill risk">High-risk</span>' : ''}
          ${m.flags.includes("memorization_heavy") ? '<span class="pill memo">Memorization-heavy</span>' : ''}
          ${m.flags.includes("scenario_based") ? '<span class="pill scenario">Scenario-based</span>' : ''}</p>
@@ -126,60 +210,26 @@ function renderModules() {
   });
 }
 
-function buildObjectivePool(moduleId) {
-  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
-  const domain = state.contentMap.domains.find(d => d.id === domainMap[moduleId]) || state.contentMap.domains[0];
-  return domain.topics.flatMap(t =>
-    t.subtopics.flatMap(s =>
-      s.learning_objectives.map((lo, i) => ({
-        concept: `${t.name} • ${s.name} • Key ${i + 1}`,
-        definition: lo,
-      }))
-    )
-  );
-}
-
-function createLevelDeck(moduleId, levelNum) {
-  const pool = buildObjectivePool(moduleId);
-  const cards = [];
-  for (let i = 0; i < 10; i++) {
-    const idx = (levelNum * 3 + i) % pool.length;
-    cards.push(pool[idx]);
-  }
-
-  const quiz = cards.map((card, i) => {
-    const d1 = cards[(i + 2) % cards.length].definition;
-    const d2 = cards[(i + 5) % cards.length].definition;
-    const d3 = cards[(i + 7) % cards.length].definition;
-    const choices = shuffle([card.definition, d1, d2, d3]);
-    return {
-      prompt: `Which definition best matches: ${card.concept}?`,
-      choices,
-      correctIndex: choices.indexOf(card.definition),
-    };
-  });
-
-  return { cards, quiz };
-}
-
 function openModuleWorkbench(moduleId) {
   state.activeModuleId = moduleId;
   const mod = state.contentMap.recommended_learning_path.find(x => x.module === moduleId);
   const p = getProgress();
   const doneLevels = Object.values(p.moduleProgress[moduleId] || {}).filter(Boolean).length;
+  const levels = buildModuleBlueprint(moduleId);
 
   $("workbenchTitle").textContent = `${mod.name} • Study Tools`;
   $("workbenchMeta").textContent = `10 levels • ~45 minutes total • knowledge ${moduleLikelyPass(moduleId, p)}%`;
   $("moduleProgressFill").style.width = `${(doneLevels / 10) * 100}%`;
 
-  $("levelCards").innerHTML = Array.from({ length: 10 }).map((_, idx) => {
+  $("levelCards").innerHTML = levels.map((level, idx) => {
     const levelId = `L${idx + 1}`;
     const done = !!(p.moduleProgress[moduleId] || {})[levelId];
     return `<article class="module level-card">
-      <h4>Level ${idx + 1}</h4>
-      <p class="small">~4–5 min • 10 flashcards + 10-question check</p>
+      <h4>${level.title}</h4>
+      <p class="small">${level.description}</p>
+      <p class="small">~4–5 min • flashcards + level check</p>
       <p>${done ? '<span class="pill scenario">Completed</span>' : '<span class="pill">Not started</span>'}</p>
-      <button class="ghost" data-level="${idx + 1}">Start Level ${idx + 1}</button>
+      <button class="ghost" data-level="${idx + 1}">Start ${level.title}</button>
     </article>`;
   }).join("");
 
@@ -189,9 +239,9 @@ function openModuleWorkbench(moduleId) {
 }
 
 function startLevelSession(levelNum) {
-  const { cards, quiz } = createLevelDeck(state.activeModuleId, levelNum);
+  const { level, cards, quiz } = createLevelDeck(state.activeModuleId, levelNum);
   state.activeLevelSession = {
-    levelNum,
+    level,
     cards,
     quiz,
     cardIdx: 0,
@@ -199,7 +249,6 @@ function startLevelSession(levelNum) {
     stage: "flashcards",
     quizIdx: 0,
     answers: [],
-    locked: false,
   };
   renderLevelTool();
   $("levelTool").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -214,19 +263,23 @@ function renderLevelTool() {
     const card = s.cards[s.cardIdx];
     host.innerHTML = `
       <hr />
-      <h3>Level ${s.levelNum} • Tool 1: Flashcards</h3>
-      <p class="small">Card ${s.cardIdx + 1}/10</p>
-      <button id="flashCard" class="flashcard ${s.flipped ? "flipped" : ""}">${s.flipped ? card.definition : `<strong>${card.concept}</strong>`}</button>
+      <h3>${s.level.title} • Tool 1: Flashcards</h3>
+      <p class="small">${s.level.description}</p>
+      <p class="small">Card ${s.cardIdx + 1}/${s.cards.length}</p>
+      <button id="flashCard" class="flashcard ${s.flipped ? "flipped" : ""}">
+        <div class="flash-title">${card.title}</div>
+        <div class="flash-body">${s.flipped ? `<strong>${card.backTitle}:</strong> ${card.backBody}` : card.frontBody}</div>
+      </button>
       <div class="row">
         <button id="prevCard" class="ghost" ${s.cardIdx === 0 ? "disabled" : ""}>Previous</button>
-        <button id="nextCard" class="ghost" ${s.cardIdx === 9 ? "disabled" : ""}>Next</button>
-        <button id="toQuizTool" class="action" ${s.cardIdx < 9 ? "disabled" : ""}>Move to Tool 2: Level Check</button>
+        <button id="nextCard" class="ghost" ${s.cardIdx === s.cards.length - 1 ? "disabled" : ""}>Next</button>
+        <button id="toQuizTool" class="action" ${s.cardIdx < s.cards.length - 1 ? "disabled" : ""}>Move to Tool 2: Level Check</button>
       </div>
     `;
 
     $("flashCard").addEventListener("click", () => { s.flipped = !s.flipped; renderLevelTool(); });
     $("prevCard").addEventListener("click", () => { s.cardIdx = Math.max(0, s.cardIdx - 1); s.flipped = false; renderLevelTool(); });
-    $("nextCard").addEventListener("click", () => { s.cardIdx = Math.min(9, s.cardIdx + 1); s.flipped = false; renderLevelTool(); });
+    $("nextCard").addEventListener("click", () => { s.cardIdx = Math.min(s.cards.length - 1, s.cardIdx + 1); s.flipped = false; renderLevelTool(); });
     $("toQuizTool").addEventListener("click", () => { s.stage = "quiz"; renderLevelTool(); });
     return;
   }
@@ -236,12 +289,13 @@ function renderLevelTool() {
   const selected = typeof picked === "number" ? picked : -1;
   host.innerHTML = `
     <hr />
-    <h3>Level ${s.levelNum} • Tool 2: Level Check</h3>
-    <p class="small">Question ${s.quizIdx + 1}/10</p>
+    <h3>${s.level.title} • Tool 2: Level Check</h3>
+    <p class="small">${s.level.description}</p>
+    <p class="small">Question ${s.quizIdx + 1}/${s.quiz.length}</p>
     <p><strong>${q.prompt}</strong></p>
     ${q.choices.map((c, i) => `<label class="choice"><input type="radio" name="lvlMini" value="${i}" ${selected === i ? "checked" : ""}/> ${c}</label>`).join("")}
     <div class="row">
-      <button id="submitMiniQ" class="action">${s.quizIdx < 9 ? "Submit & Next" : "Finish Level Check"}</button>
+      <button id="submitMiniQ" class="action">${s.quizIdx < s.quiz.length - 1 ? "Submit & Next" : "Finish Level Check"}</button>
     </div>
     <div id="levelFeedback"></div>
   `;
@@ -254,19 +308,19 @@ function renderLevelTool() {
     }
 
     s.answers[s.quizIdx] = Number(pickedInput.value);
-    if (s.quizIdx < 9) {
+    if (s.quizIdx < s.quiz.length - 1) {
       s.quizIdx += 1;
       renderLevelTool();
       return;
     }
 
     const correct = s.quiz.reduce((acc, question, i) => acc + (s.answers[i] === question.correctIndex ? 1 : 0), 0);
-    const score = Math.round((correct / 10) * 100);
+    const score = Math.round((correct / s.quiz.length) * 100);
     const pass = score >= 80;
 
     const p = getProgress();
     p.moduleProgress[state.activeModuleId] = p.moduleProgress[state.activeModuleId] || {};
-    if (pass) p.moduleProgress[state.activeModuleId][`L${s.levelNum}`] = true;
+    if (pass) p.moduleProgress[state.activeModuleId][`L${s.level.levelNum}`] = true;
     const completedCount = Object.values(p.moduleProgress[state.activeModuleId]).filter(Boolean).length;
     if (completedCount >= 10) p.completedModules[state.activeModuleId] = true;
     saveProgress(p);
@@ -277,7 +331,7 @@ function renderLevelTool() {
     openModuleWorkbench(state.activeModuleId);
 
     $("levelTool").classList.remove("hidden");
-    $("levelTool").innerHTML += `<p class="${pass ? "feedback-ok" : "feedback-no"}"><strong>Level score: ${score}% (${correct}/10).</strong> ${pass ? "Level passed and tracked." : "Need 80% to pass this level. Review flashcards and retry."}</p>`;
+    $("levelTool").innerHTML += `<p class="${pass ? "feedback-ok" : "feedback-no"}"><strong>Level score: ${score}% (${correct}/${s.quiz.length}).</strong> ${pass ? "Level passed and tracked." : "Need 80% to pass this level. Review flashcards and retry."}</p>`;
     $("levelTool").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }

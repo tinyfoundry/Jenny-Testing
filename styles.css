@@ -15,9 +15,9 @@ label{display:block;margin:.5rem 0} select{width:100%;padding:.5rem;border-radiu
 .quiz-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start}.question{font-size:1.05rem;font-weight:600}.choice{display:block;padding:.45rem .55rem;border:1px solid #d1d5db;border-radius:8px;margin:.35rem 0}
 .row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}.timer{font-weight:700;color:var(--danger)}
 .feedback-ok{color:var(--ok)} .feedback-no{color:var(--danger)}
-.flashcard{display:block;width:100%;border:1px solid #c7d2fe;background:#eef2ff;color:#1e3a8a;border-radius:12px;padding:1.2rem;text-align:left;min-height:92px;cursor:pointer}
+.flashcard{display:block;width:100%;border:1px solid #c7d2fe;background:#eef2ff;color:#1e3a8a;border-radius:12px;padding:1rem;text-align:left;min-height:180px;cursor:pointer}\n.flash-title{font-weight:700;margin-bottom:.45rem;line-height:1.3}\n.flash-body{line-height:1.45;font-size:.95rem}
 .flashcard.flipped{background:#dbeafe;color:#1e3a8a}
 .progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:.6rem 0 1rem}
 .progress-fill{height:100%;background:#2563eb;width:0;transition:width .2s ease}
 .level-card h4{margin:.1rem 0}
-@media (max-width:700px){.scorebox{font-size:.8rem}.topbar{align-items:flex-start}.brand{font-size:.95rem}}
+@media (max-width:700px){.scorebox{font-size:.8rem}.topbar{align-items:flex-start}.brand{font-size:.95rem}.card{padding:.85rem}.flashcard{min-height:150px;padding:.85rem}}

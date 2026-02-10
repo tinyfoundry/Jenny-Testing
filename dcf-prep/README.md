@@ -1,6 +1,6 @@
 # DCF Exam Prep v1 (Static Frontend)
 
-This repository now serves a static, GitHub/Vercel-friendly DCF exam-prep app from the root path, built from uploaded source PDFs only.
+This folder contains a static, GitHub/Vercel-friendly DCF exam-prep app built from uploaded source PDFs only.
 
 ## What is included
 
@@ -61,19 +61,10 @@ python3 -m http.server 8000
 
 Open:
 
-- `http://localhost:8000/`
+- `http://localhost:8000/dcf-prep/`
 
 ## Deploy as static site
 
-- **GitHub Pages**: publish the repository root (site loads at `/`).
+- **GitHub Pages**: publish root, then browse `/dcf-prep/`.
 - **Vercel**: import repo, no build step required for this folder.
 
-
-## Migration hardening (legacy URL protection)
-
-To prevent old Family Fun routes from appearing during cache-heavy deploys, this repo now includes:
-- Redirect stubs for legacy pages (`about.html`, `events.html`, `jacksonville.html`, `submit.html`) that immediately send users to `/`.
-- `404.html` fallback redirect to `/`.
-- `vercel.json` rewrite/header rules and `_headers` cache controls to reduce stale-page behavior.
-
-If you still see old content in a browser, do a hard refresh or clear cache once.

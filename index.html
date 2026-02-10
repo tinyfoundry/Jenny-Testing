@@ -1,195 +1,94 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Family Fun Finder - St. Augustine</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="container header-content">
-        <div class="brand">
-          <span class="brand-mark" aria-hidden="true">★</span>
-          <div>
-            <p class="brand-title">Family Fun Finder</p>
-            <p class="brand-subtitle">St. Augustine</p>
-          </div>
-        </div>
-        <nav class="nav-links" aria-label="Primary">
-          <a href="#events">Events</a>
-          <a href="#categories">Categories</a>
-          <a href="#guides">Guides</a>
-          <a href="#newsletter">Newsletter</a>
-          <a class="cta-link" href="jacksonville.html">Jacksonville →</a>
-        </nav>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DCF Exam Prep v1</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <button id="backBtn" class="ghost">← Back</button>
+    <div class="brand">DCF Exam Prep</div>
+    <div class="scorebox">
+      <div>Readiness: <strong id="readinessScore">0%</strong></div>
+      <div>Likelihood to Pass: <strong id="passLikelihood">0%</strong></div>
+    </div>
+  </header>
+
+  <main id="app" class="container">
+    <section id="dashboard" class="card">
+      <h1>Dashboard</h1>
+      <p class="sub">Study modules, mini quizzes, full exam simulation, and adaptive practice.</p>
+      <div class="grid two">
+        <button data-view="modules" class="action">Study Modules</button>
+        <button data-view="practice" class="action">Practice Mode</button>
+        <button data-view="exam" class="action">Exam Mode (Mini / Full)</button>
+        <button data-view="adaptive" class="action">Adaptive Mode</button>
       </div>
-    </header>
+      <div id="overview"></div>
+    </section>
 
-    <main>
-      <section class="hero">
-        <div class="container hero-content">
-          <div>
-            <p class="tag">Family-friendly • Local • Updated weekly</p>
-            <h1>Find bright, easygoing family fun in St. Augustine.</h1>
-            <p class="hero-copy">
-              Search events, save favorites, and share weekend plans. Designed for parents who want
-              the fun without the chaos.
-            </p>
-            <div class="hero-actions">
-              <label class="search" aria-label="Search events">
-                <span>Search</span>
-                <input id="event-search" type="search" placeholder="Try: beach, storytime, park" />
-              </label>
-              <button class="primary-button" type="button">Browse this week</button>
-            </div>
-          </div>
-          <div class="hero-card" role="presentation">
-            <h2>This Week's Spotlight</h2>
-            <p class="hero-card-title">Sunset Family Picnic</p>
-            <p class="hero-card-meta">Thursday • 5:30 PM • Lighthouse Park</p>
-            <p class="hero-card-body">
-              Bring blankets and snacks. Live acoustic music + a mini nature walk for kids.
-            </p>
-            <button class="secondary-button" type="button">View details</button>
-          </div>
-        </div>
-      </section>
+    <section id="modules" class="card hidden">
+      <h2>Study Modules</h2>
+      <div id="moduleList"></div>
+    </section>
 
-      <section class="quick-links" id="guides">
-        <div class="container">
-          <h2>Quick Guides</h2>
-          <div class="quick-grid">
-            <article>
-              <h3>Kids Eat Free</h3>
-              <p>Weeknight deals and family-friendly restaurants.</p>
-            </article>
-            <article>
-              <h3>Rainy Day Play</h3>
-              <p>Indoor playgrounds, museums, and cozy cafes.</p>
-            </article>
-            <article>
-              <h3>Free Weekend Fun</h3>
-              <p>Markets, parks, and community events.</p>
-            </article>
-          </div>
-        </div>
-      </section>
+    <section id="practice" class="card hidden">
+      <h2>Practice Mode</h2>
+      <p>Topic-based quizzes with immediate feedback and full rationale.</p>
+      <label>Domain
+        <select id="practiceDomain"></select>
+      </label>
+      <label>Question Count
+        <select id="practiceCount">
+          <option>5</option><option selected>10</option><option>15</option>
+        </select>
+      </label>
+      <button id="startPractice" class="action">Start Practice Quiz</button>
+    </section>
 
-      <section class="categories" id="categories">
-        <div class="container">
-          <div class="section-heading">
-            <h2>Browse by Category</h2>
-            <p>Pick a vibe, then see what's happening around town.</p>
-          </div>
-          <div class="card-grid">
-            <article class="category-card">Beach & Outdoor</article>
-            <article class="category-card">Storytime & Learning</article>
-            <article class="category-card">Festivals & Markets</article>
-            <article class="category-card">Sports & Active</article>
-            <article class="category-card">Arts & Crafts</article>
-            <article class="category-card">Animal Encounters</article>
-          </div>
-        </div>
-      </section>
+    <section id="exam" class="card hidden">
+      <h2>Exam Mode</h2>
+      <p>Timed simulation with no immediate feedback; final score + domain breakdown.</p>
+      <label>Exam Size
+        <select id="examSize">
+          <option value="mini">Mini (15 questions / 20 min)</option>
+          <option value="full">Full (30 questions / 45 min)</option>
+        </select>
+      </label>
+      <button id="startExam" class="action danger">Start Exam</button>
+      <div id="timer" class="timer hidden"></div>
+    </section>
 
-      <section class="events" id="events">
-        <div class="container">
-          <div class="section-heading">
-            <h2>Upcoming Events</h2>
-            <p>Highlights for St. Augustine families this week.</p>
-          </div>
-          <div class="event-grid" id="event-grid">
-            <article class="event-card" data-tags="beach outdoor">
-              <div>
-                <p class="event-date">Sat • Mar 9</p>
-                <h3>Family Beach Clean-Up</h3>
-                <p class="event-meta">9:00 AM • Anastasia State Park</p>
-                <p>Kid-friendly stations, snacks, and a nature scavenger hunt.</p>
-              </div>
-              <span class="pill">Free</span>
-            </article>
-            <article class="event-card" data-tags="learning storytime">
-              <div>
-                <p class="event-date">Sun • Mar 10</p>
-                <h3>Storytime + Craft Hour</h3>
-                <p class="event-meta">10:30 AM • St. Johns Library</p>
-                <p>Weekly storytime followed by a spring-themed craft.</p>
-              </div>
-              <span class="pill">All ages</span>
-            </article>
-            <article class="event-card" data-tags="market festival">
-              <div>
-                <p class="event-date">Fri • Mar 15</p>
-                <h3>Historic District Night Market</h3>
-                <p class="event-meta">4:00 PM • Plaza de la Constitución</p>
-                <p>Food trucks, artisans, and live music with space for kids to play.</p>
-              </div>
-              <span class="pill">Outdoor</span>
-            </article>
-            <article class="event-card" data-tags="sports active">
-              <div>
-                <p class="event-date">Sat • Mar 16</p>
-                <h3>Family Bike Ride</h3>
-                <p class="event-meta">8:30 AM • Palatka-to-St. Augustine Trail</p>
-                <p>A gentle pace ride with rest stops and safety tips for kids.</p>
-              </div>
-              <span class="pill">Bring helmets</span>
-            </article>
-          </div>
-        </div>
-      </section>
+    <section id="adaptive" class="card hidden">
+      <h2>Adaptive Mode</h2>
+      <p>Difficulty rises after streaks; weak domains are re-surfaced automatically.</p>
+      <button id="startAdaptive" class="action">Start Adaptive Session</button>
+      <p id="adaptiveInfo" class="sub"></p>
+    </section>
 
-      <section class="ads">
-        <div class="container">
-          <div class="section-heading">
-            <h2>Community Partners</h2>
-            <p>Space for local ads or sponsorships.</p>
-          </div>
-          <div class="ad-grid">
-            <article class="ad-card">
-              <h3>Ad Spot #1</h3>
-              <p>Use this space for a seasonal camp or birthday venue.</p>
-            </article>
-            <article class="ad-card">
-              <h3>Ad Spot #2</h3>
-              <p>Add a short offer, logo, and a link.</p>
-            </article>
-            <article class="ad-card">
-              <h3>Ad Spot #3</h3>
-              <p>Highlight a small business the community loves.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="newsletter" id="newsletter">
-        <div class="container newsletter-card">
-          <div>
-            <h2>Get the Friday Family Fun List</h2>
-            <p>One email a week with the top picks for St. Augustine families.</p>
-          </div>
-          <form class="newsletter-form">
-            <input type="email" placeholder="you@email.com" aria-label="Email" />
-            <button class="primary-button" type="submit">Join free</button>
-          </form>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="container footer-content">
-        <div>
-          <p class="brand-title">Family Fun Finder</p>
-          <p class="brand-subtitle">St. Augustine</p>
-        </div>
-        <div>
-          <p>Questions or submissions?</p>
-          <a href="mailto:hello@familyfunfinder.com">hello@familyfunfinder.com</a>
-        </div>
+    <section id="quiz" class="card hidden">
+      <div class="quiz-head">
+        <h2 id="quizTitle">Quiz</h2>
+        <div id="quizMeta"></div>
       </div>
-    </footer>
+      <div id="questionWrap"></div>
+      <div class="row">
+        <button id="submitAnswer" class="action">Submit</button>
+        <button id="nextQuestion" class="ghost hidden">Next</button>
+        <button id="finishQuiz" class="danger hidden">Finish</button>
+      </div>
+      <div id="feedback"></div>
+    </section>
 
-    <script src="script.js"></script>
-  </body>
+    <section id="results" class="card hidden">
+      <h2>Results & Review</h2>
+      <div id="resultsBody"></div>
+      <button id="toDashboard" class="action">Back to Dashboard</button>
+    </section>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
 </html>

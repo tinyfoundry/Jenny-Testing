@@ -1,0 +1,223 @@
+{
+  "exam": "Florida DCF Certification Prep",
+  "source_documents": [
+    "guide.pdf",
+    "mod1.pdf",
+    "mod2.pdf",
+    "mod3.pdf",
+    "mod4.pdf",
+    "mod5.pdf",
+    "mod6.pdf",
+    "Mod 1.pdf",
+    "Mod2.pdf",
+    "Mod3.pdf",
+    "Mod4.pdf",
+    "Mod5.pdf"
+  ],
+  "ambiguity_notes": [
+    "Some source PDFs contain extraction artifacts (spacing/encoding noise). Items flagged as ambiguous should be verified against original PDFs before high-stakes use.",
+    "Exact statute/rule numbers and certain numeric thresholds are inconsistently legible in extracted text and are intentionally omitted unless clearly readable."
+  ],
+  "domains": [
+    {
+      "id": "D1",
+      "name": "Identifying Child Abuse and Neglect",
+      "high_risk": true,
+      "memorization_heavy": true,
+      "scenario_based": true,
+      "topics": [
+        {
+          "name": "Abuse and Neglect Types",
+          "subtopics": [
+            {
+              "name": "Categories and indicators",
+              "learning_objectives": [
+                "Differentiate physical, sexual, and emotional abuse.",
+                "Define neglect as failure to provide support, supervision, warmth, acceptance, attention, and normal living experiences.",
+                "Recognize observable physical and behavioral indicators associated with abuse and neglect."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Risk and Protective Context",
+          "subtopics": [
+            {
+              "name": "Child, family, environmental factors",
+              "learning_objectives": [
+                "Identify child, family, and environmental factors that increase abuse/neglect risk.",
+                "Use caregiver-child-family interactions to gather relevant concern signals."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D2",
+      "name": "Reporting Child Abuse and Neglect",
+      "high_risk": true,
+      "memorization_heavy": true,
+      "scenario_based": true,
+      "topics": [
+        {
+          "name": "Legal Duty to Report",
+          "subtopics": [
+            {
+              "name": "Mandated reporting",
+              "learning_objectives": [
+                "State that every adult in Florida is required by law to report suspected abuse/neglect.",
+                "Explain identity requirements: child care professionals provide their names; others may report anonymously.",
+                "Recall that failure to report suspected abuse/neglect is described as a third-degree felony in source text."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Hotline Reporting Channels",
+          "subtopics": [
+            {
+              "name": "Available reporting methods",
+              "learning_objectives": [
+                "List hotline submission channels named in source text: online, telephone, Florida Relay/TTY, and fax.",
+                "Select appropriate reporting path based on immediate situation constraints."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D3",
+      "name": "Observation and Screening",
+      "high_risk": true,
+      "memorization_heavy": false,
+      "scenario_based": true,
+      "topics": [
+        {
+          "name": "Principles",
+          "subtopics": [
+            {
+              "name": "Comprehensive and ongoing practice",
+              "learning_objectives": [
+                "Focus on each child’s individual traits and abilities.",
+                "Use comprehensive, multi-method information collection.",
+                "Apply ongoing observation/screening for earlier need identification.",
+                "Ensure observation and screening are purposeful and focused."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Methods and Tools",
+          "subtopics": [
+            {
+              "name": "Checklist, anecdotal record, running record",
+              "learning_objectives": [
+                "Choose a checklist to track presence/absence of target skills.",
+                "Use anecdotal records to document events shortly after occurrence.",
+                "Use running records to capture behavior as it happens over short periods."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Referral Process",
+          "subtopics": [
+            {
+              "name": "From concern to referral",
+              "learning_objectives": [
+                "Explain referral as directing child/family to professional services for further evaluation.",
+                "Initiate referral after need is identified via observation/screening and documentation.",
+                "Use timely referrals to support early intervention and best outcomes.",
+                "Communicate referral steps with families in a supportive, collaborative way."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D4",
+      "name": "Child Care Facility Rules and Regulations",
+      "high_risk": true,
+      "memorization_heavy": true,
+      "scenario_based": true,
+      "topics": [
+        {
+          "name": "Regulatory Framework",
+          "subtopics": [
+            {
+              "name": "Purpose and program types",
+              "learning_objectives": [
+                "Describe the role of regulation in protecting child health and safety.",
+                "Differentiate licensed, exempt, drop-in, and evening care program concepts as presented in source materials.",
+                "Recognize alignment of statutes, administrative code, and handbook guidance."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "General Requirements",
+          "subtopics": [
+            {
+              "name": "Licensure and compliance",
+              "learning_objectives": [
+                "Identify annual licensure application expectations.",
+                "Explain the role of inspections for compliance.",
+                "Connect enrollment records and staff-to-child ratios with child safety."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Physical Environment and Health",
+          "subtopics": [
+            {
+              "name": "Daily safety operations",
+              "learning_objectives": [
+                "Apply daily indoor/outdoor safety checks.",
+                "Ensure hazardous materials and firearms are inaccessible to children.",
+                "Recognize licensed capacity and usable space concepts in daily planning."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Training and Personnel Records",
+          "subtopics": [
+            {
+              "name": "Initial and ongoing requirements",
+              "learning_objectives": [
+                "Recall the 90-day window to begin training for new child care personnel.",
+                "Recall completion expectations for 40-hour introductory training (or approved exemption pathways).",
+                "Identify required recurring training elements (e.g., literacy, fire extinguisher, and other named topics in source text)."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Enforcement and Professionalism",
+          "subtopics": [
+            {
+              "name": "Violations, sanctions, and professional growth",
+              "learning_objectives": [
+                "Classify violations by enforcement categories (Class I/II/III).",
+                "Explain sanctions as tied to standard violated, frequency, and severity.",
+                "Create and maintain a professional development plan with ongoing education."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recommended_learning_path": [
+    { "module": "M1", "name": "Identifying Abuse/Neglect", "estimated_minutes": 45, "flags": ["high_risk", "memorization_heavy", "scenario_based"] },
+    { "module": "M2", "name": "Reporting Abuse/Neglect", "estimated_minutes": 40, "flags": ["high_risk", "memorization_heavy", "scenario_based"] },
+    { "module": "M3", "name": "Observation Principles + Methods", "estimated_minutes": 60, "flags": ["high_risk", "scenario_based"] },
+    { "module": "M4", "name": "Referral Process", "estimated_minutes": 35, "flags": ["high_risk", "scenario_based"] },
+    { "module": "M5", "name": "Rules/Regulations: Framework + General", "estimated_minutes": 70, "flags": ["high_risk", "memorization_heavy"] },
+    { "module": "M6", "name": "Health/Safety + Training + Enforcement + Professionalism", "estimated_minutes": 75, "flags": ["high_risk", "memorization_heavy", "scenario_based"] }
+  ]
+}

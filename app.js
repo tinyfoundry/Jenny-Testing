@@ -7,6 +7,7 @@ const state = {
   secondsLeft: 0,
   navStack: ["dashboard"],
   activeModuleId: null,
+  activeLevelSession: null,
 };
 
 const STORAGE_KEY = "dcfPrepV1";
@@ -112,7 +113,8 @@ function renderModules() {
     div.className = "module module-card";
     div.innerHTML = `
       <h3>${idx + 1}. ${m.name}</h3>
-      <p><strong>Total time:</strong> ~45 min • <strong>10 levels</strong> (~4–5 min each)</p>
+      <p><strong>Total time:</strong> ~45 min • <strong>10 levels</strong></p>
+      <p class="small">Per level: Tool 1 (10 flashcards) → Tool 2 (10-question level check)</p>
       <p>${m.flags.includes("high_risk") ? '<span class="pill risk">High-risk</span>' : ''}
          ${m.flags.includes("memorization_heavy") ? '<span class="pill memo">Memorization-heavy</span>' : ''}
          ${m.flags.includes("scenario_based") ? '<span class="pill scenario">Scenario-based</span>' : ''}</p>
@@ -124,108 +126,159 @@ function renderModules() {
   });
 }
 
-function createLevelsForModule(moduleId) {
+function buildObjectivePool(moduleId) {
   const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
   const domain = state.contentMap.domains.find(d => d.id === domainMap[moduleId]) || state.contentMap.domains[0];
-  const objectives = domain.topics.flatMap(t => t.subtopics.flatMap(s => s.learning_objectives.map(lo => ({ topic: t.name, subtopic: s.name, lo }))));
-  const levels = [];
+  return domain.topics.flatMap(t =>
+    t.subtopics.flatMap(s =>
+      s.learning_objectives.map((lo, i) => ({
+        concept: `${t.name} • ${s.name} • Key ${i + 1}`,
+        definition: lo,
+      }))
+    )
+  );
+}
+
+function createLevelDeck(moduleId, levelNum) {
+  const pool = buildObjectivePool(moduleId);
+  const cards = [];
   for (let i = 0; i < 10; i++) {
-    const base = objectives[i % objectives.length];
-    const distractor = objectives[(i + 3) % objectives.length]?.lo || objectives[0].lo;
-    levels.push({
-      id: `L${i + 1}`,
-      title: `Level ${i + 1}`,
-      est: "4–5 min",
-      flashFront: base.topic,
-      flashBack: base.lo,
-      miniQ: {
-        prompt: `Which statement aligns with this level focus (${base.subtopic})?`,
-        choices: [base.lo, distractor],
-        correct: 0
-      }
-    });
+    const idx = (levelNum * 3 + i) % pool.length;
+    cards.push(pool[idx]);
   }
-  return levels;
+
+  const quiz = cards.map((card, i) => {
+    const d1 = cards[(i + 2) % cards.length].definition;
+    const d2 = cards[(i + 5) % cards.length].definition;
+    const d3 = cards[(i + 7) % cards.length].definition;
+    const choices = shuffle([card.definition, d1, d2, d3]);
+    return {
+      prompt: `Which definition best matches: ${card.concept}?`,
+      choices,
+      correctIndex: choices.indexOf(card.definition),
+    };
+  });
+
+  return { cards, quiz };
 }
 
 function openModuleWorkbench(moduleId) {
   state.activeModuleId = moduleId;
   const mod = state.contentMap.recommended_learning_path.find(x => x.module === moduleId);
   const p = getProgress();
-  const levels = createLevelsForModule(moduleId);
   const doneLevels = Object.values(p.moduleProgress[moduleId] || {}).filter(Boolean).length;
+
   $("workbenchTitle").textContent = `${mod.name} • Study Tools`;
   $("workbenchMeta").textContent = `10 levels • ~45 minutes total • knowledge ${moduleLikelyPass(moduleId, p)}%`;
   $("moduleProgressFill").style.width = `${(doneLevels / 10) * 100}%`;
 
-  $("levelCards").innerHTML = levels.map((l, idx) => {
-    const done = !!(p.moduleProgress[moduleId] || {})[l.id];
+  $("levelCards").innerHTML = Array.from({ length: 10 }).map((_, idx) => {
+    const levelId = `L${idx + 1}`;
+    const done = !!(p.moduleProgress[moduleId] || {})[levelId];
     return `<article class="module level-card">
-      <h4>${l.title}</h4>
-      <p class="small">${l.est}</p>
-      <p class="small">Flashcard + mini-check</p>
+      <h4>Level ${idx + 1}</h4>
+      <p class="small">~4–5 min • 10 flashcards + 10-question check</p>
       <p>${done ? '<span class="pill scenario">Completed</span>' : '<span class="pill">Not started</span>'}</p>
-      <button class="ghost" data-level="${idx}">Start ${l.title}</button>
+      <button class="ghost" data-level="${idx + 1}">Start Level ${idx + 1}</button>
     </article>`;
   }).join("");
 
-  document.querySelectorAll("[data-level]").forEach(btn => btn.addEventListener("click", (e) => openLevelTool(levels[Number(e.target.dataset.level)])));
+  document.querySelectorAll("[data-level]").forEach(btn => btn.addEventListener("click", (e) => startLevelSession(Number(e.target.dataset.level))));
   $("levelTool").classList.add("hidden");
   show("moduleWorkbench");
 }
 
-function openLevelTool(level) {
+function startLevelSession(levelNum) {
+  const { cards, quiz } = createLevelDeck(state.activeModuleId, levelNum);
+  state.activeLevelSession = {
+    levelNum,
+    cards,
+    quiz,
+    cardIdx: 0,
+    flipped: false,
+    stage: "flashcards",
+    quizIdx: 0,
+    answers: [],
+    locked: false,
+  };
+  renderLevelTool();
+  $("levelTool").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function renderLevelTool() {
+  const s = state.activeLevelSession;
   const host = $("levelTool");
   host.classList.remove("hidden");
+
+  if (s.stage === "flashcards") {
+    const card = s.cards[s.cardIdx];
+    host.innerHTML = `
+      <hr />
+      <h3>Level ${s.levelNum} • Tool 1: Flashcards</h3>
+      <p class="small">Card ${s.cardIdx + 1}/10</p>
+      <button id="flashCard" class="flashcard ${s.flipped ? "flipped" : ""}">${s.flipped ? card.definition : `<strong>${card.concept}</strong>`}</button>
+      <div class="row">
+        <button id="prevCard" class="ghost" ${s.cardIdx === 0 ? "disabled" : ""}>Previous</button>
+        <button id="nextCard" class="ghost" ${s.cardIdx === 9 ? "disabled" : ""}>Next</button>
+        <button id="toQuizTool" class="action" ${s.cardIdx < 9 ? "disabled" : ""}>Move to Tool 2: Level Check</button>
+      </div>
+    `;
+
+    $("flashCard").addEventListener("click", () => { s.flipped = !s.flipped; renderLevelTool(); });
+    $("prevCard").addEventListener("click", () => { s.cardIdx = Math.max(0, s.cardIdx - 1); s.flipped = false; renderLevelTool(); });
+    $("nextCard").addEventListener("click", () => { s.cardIdx = Math.min(9, s.cardIdx + 1); s.flipped = false; renderLevelTool(); });
+    $("toQuizTool").addEventListener("click", () => { s.stage = "quiz"; renderLevelTool(); });
+    return;
+  }
+
+  const q = s.quiz[s.quizIdx];
+  const picked = s.answers[s.quizIdx];
+  const selected = typeof picked === "number" ? picked : -1;
   host.innerHTML = `
     <hr />
-    <h3>${level.title}</h3>
-    <p class="small">Tool 1: Flashcard (click to flip)</p>
-    <button id="flashCard" class="flashcard" data-side="front"><strong>${level.flashFront}</strong></button>
-    <p class="small">Tool 2: Mini-check</p>
-    <p><strong>${level.miniQ.prompt}</strong></p>
-    ${level.miniQ.choices.map((c, i) => `<label class="choice"><input type="radio" name="lvlMini" value="${i}"/> ${c}</label>`).join("")}
+    <h3>Level ${s.levelNum} • Tool 2: Level Check</h3>
+    <p class="small">Question ${s.quizIdx + 1}/10</p>
+    <p><strong>${q.prompt}</strong></p>
+    ${q.choices.map((c, i) => `<label class="choice"><input type="radio" name="lvlMini" value="${i}" ${selected === i ? "checked" : ""}/> ${c}</label>`).join("")}
     <div class="row">
-      <button id="submitLevel" class="action">Submit Level Check</button>
+      <button id="submitMiniQ" class="action">${s.quizIdx < 9 ? "Submit & Next" : "Finish Level Check"}</button>
     </div>
     <div id="levelFeedback"></div>
   `;
 
-  $("flashCard").addEventListener("click", () => {
-    const card = $("flashCard");
-    const side = card.dataset.side;
-    if (side === "front") {
-      card.dataset.side = "back";
-      card.innerHTML = `<span>${level.flashBack}</span>`;
-      card.classList.add("flipped");
-    } else {
-      card.dataset.side = "front";
-      card.innerHTML = `<strong>${level.flashFront}</strong>`;
-      card.classList.remove("flipped");
-    }
-  });
-
-  $("submitLevel").addEventListener("click", () => {
-    const picked = document.querySelector("input[name='lvlMini']:checked");
-    if (!picked) {
-      $("levelFeedback").innerHTML = `<p class="feedback-no">Pick an answer before submitting.</p>`;
+  $("submitMiniQ").addEventListener("click", () => {
+    const pickedInput = document.querySelector("input[name='lvlMini']:checked");
+    if (!pickedInput) {
+      $("levelFeedback").innerHTML = `<p class="feedback-no">Pick an answer before continuing.</p>`;
       return;
     }
-    const correct = Number(picked.value) === level.miniQ.correct;
+
+    s.answers[s.quizIdx] = Number(pickedInput.value);
+    if (s.quizIdx < 9) {
+      s.quizIdx += 1;
+      renderLevelTool();
+      return;
+    }
+
+    const correct = s.quiz.reduce((acc, question, i) => acc + (s.answers[i] === question.correctIndex ? 1 : 0), 0);
+    const score = Math.round((correct / 10) * 100);
+    const pass = score >= 80;
+
     const p = getProgress();
     p.moduleProgress[state.activeModuleId] = p.moduleProgress[state.activeModuleId] || {};
-    if (correct) p.moduleProgress[state.activeModuleId][level.id] = true;
-
+    if (pass) p.moduleProgress[state.activeModuleId][`L${s.levelNum}`] = true;
     const completedCount = Object.values(p.moduleProgress[state.activeModuleId]).filter(Boolean).length;
     if (completedCount >= 10) p.completedModules[state.activeModuleId] = true;
-
     saveProgress(p);
+
     updateTopScores();
     renderOverview();
     renderModules();
     openModuleWorkbench(state.activeModuleId);
 
-    $("levelFeedback").innerHTML = `<p class="${correct ? "feedback-ok" : "feedback-no"}">${correct ? "Great work. Level completed." : "Not quite. Review flashcard and retry this level."}</p>`;
+    $("levelTool").classList.remove("hidden");
+    $("levelTool").innerHTML += `<p class="${pass ? "feedback-ok" : "feedback-no"}"><strong>Level score: ${score}% (${correct}/10).</strong> ${pass ? "Level passed and tracked." : "Need 80% to pass this level. Review flashcards and retry."}</p>`;
+    $("levelTool").scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
@@ -285,7 +338,7 @@ function startAdaptive() {
 
 function startQuiz({ mode, title, questions, timedMinutes = 0 }) {
   state.mode = mode;
-  state.quiz = { title, questions, idx: 0, answers: {}, checked: false };
+  state.quiz = { title, questions, idx: 0, answers: {} };
   $("quizTitle").textContent = title;
   show("quiz");
   if (timedMinutes) startTimer(timedMinutes * 60); else stopTimer();
@@ -359,7 +412,7 @@ function submitAnswer() {
   $("feedback").innerHTML = `
     <p class="${correct ? "feedback-ok" : "feedback-no"}"><strong>${correct ? "Correct" : "Incorrect"}</strong></p>
     <p>${q.explanation}</p>
-    <details><summary>Why each option is right/wrong</summary><ul>${wrongDetails}</ul></details>
+    <ul>${wrongDetails}</ul>
   `;
 
   if (state.quiz.idx < state.quiz.questions.length - 1) $("nextQuestion").classList.remove("hidden");

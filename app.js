@@ -103,7 +103,7 @@ function renderOverview() {
 }
 
 function mapModuleToDomain(moduleId) {
-  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
+  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D4", M5: "D5", M6: "D6" };
   return domainMap[moduleId] || "D1";
 }
 

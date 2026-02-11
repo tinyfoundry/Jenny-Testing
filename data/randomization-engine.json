@@ -1,0 +1,79 @@
+{
+  "entities": {
+    "question": {
+      "id": "string",
+      "domain": "D1..D6",
+      "secondary_domains": "string[]",
+      "difficulty": "easy|medium|hard",
+      "tags": "string[]",
+      "last_used_at": "timestamp|null",
+      "times_seen": "int",
+      "times_correct": "int"
+    },
+    "practice_session": {
+      "id": "string",
+      "user_id": "string",
+      "created_at": "timestamp",
+      "question_ids": "string[]",
+      "mode": "practice",
+      "feedback_mode": "immediate"
+    },
+    "exam_instance": {
+      "id": "string",
+      "user_id": "string",
+      "created_at": "timestamp",
+      "question_ids": "string[]",
+      "mode": "exam",
+      "feedback_mode": "deferred",
+      "seed": "int"
+    },
+    "exposure_history": {
+      "user_id": "string",
+      "question_id": "string",
+      "seen_at": "timestamp",
+      "mode": "practice|exam",
+      "correct": "bool"
+    }
+  },
+  "pseudocode": [
+    "function buildCandidatePool(mode, config, userHistory):",
+    "  pool = allQuestions.filter(q => !q.retired)",
+    "  if mode == 'practice':",
+    "    pool = removeRecentlySeen(pool, userHistory, config.recentPracticeWindow)",
+    "    pool = prioritizeByLowConfidence(pool, userHistory)  # unseen first, then low accuracy",
+    "  if mode == 'exam':",
+    "    pool = removeQuestionsSeenInCurrentExam(pool)",
+    "    pool = downweightRecentPracticeOverlap(pool, userHistory, config.recentPracticeWindow)",
+    "  pool = applyDomainWeights(pool, config.domainWeights)",
+    "  pool = enforceDifficultyMix(pool, config.difficultyTargets)",
+    "  pool = enforceScenarioFactMix(pool, config.scenarioFactRatio)",
+    "  pool = enforceDomainCoverage(pool, config.minPerDomain)",
+    "  return pool",
+    "",
+    "function selectQuestions(mode, config, userHistory):",
+    "  selected = []",
+    "  candidatePool = buildCandidatePool(mode, config, userHistory)",
+    "  while selected.length < config.totalQuestions:",
+    "    q = weightedRandom(candidatePool, score(q, mode, userHistory, config))",
+    "    if q.id not in selected:",
+    "      selected.push(q)",
+    "      candidatePool = updateAvailability(candidatePool, selected, config) # exhaustion tracking",
+    "  return selected",
+    "",
+    "function score(q, mode, history, config):",
+    "  recencyPenalty = isRecent(q, history, config.window) ? 0.05 : 1.0",
+    "  confidenceWeight = mode == 'practice' ? (1 - userAccuracy(q)) : 0.6",
+    "  examNoveltyWeight = mode == 'exam' ? noveltyAgainstRecentPractice(q, history) : 1.0",
+    "  difficultyWeight = targetDifficultyWeight(q.difficulty, config)",
+    "  domainWeight = config.domainWeights[q.domain] or 1.0",
+    "  integratedBoost = ('Integrated / Advanced' in q.tags and mode == 'exam') ? 1.2 : 1.0",
+    "  return recencyPenalty * confidenceWeight * examNoveltyWeight * difficultyWeight * domainWeight * integratedBoost"
+  ],
+  "rules": [
+    "No question repeats within one exam instance.",
+    "Practice defaults to unseen or low-confidence questions first.",
+    "Exam composition guarantees at least one question per configured domain.",
+    "Question exhaustion is tracked; when pool is depleted, system rotates oldest exposures first unless user resets progress.",
+    "Integrated/Advanced items receive higher weight in full exam simulations."
+  ]
+}

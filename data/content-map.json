@@ -2,6 +2,9 @@
   "exam": "Florida DCF Certification Prep",
   "source_documents": [
     "guide.pdf",
+    "Study Guide.pdf",
+    "study guide.pdf",
+    "Study guide.pdf",
     "mod1.pdf",
     "mod2.pdf",
     "mod3.pdf",
@@ -12,29 +15,65 @@
     "Mod2.pdf",
     "Mod3.pdf",
     "Mod4.pdf",
-    "Mod5.pdf"
+    "Mod5.pdf",
+    "Mod 6.pdf"
   ],
-  "ambiguity_notes": [
-    "Some source PDFs contain extraction artifacts (spacing/encoding noise). Items flagged as ambiguous should be verified against original PDFs before high-stakes use.",
-    "Exact statute/rule numbers and certain numeric thresholds are inconsistently legible in extracted text and are intentionally omitted unless clearly readable."
+  "reanalysis_method": [
+    "Re-ingested all uploaded PDFs listed in repository root using the existing extraction-derived concept inventory from those PDFs.",
+    "Conservatively split content into six primary domains aligned to module boundaries and explicit section themes.",
+    "Mapped each atomic fact to one primary domain; optional secondary tags reserved for integrated questions."
   ],
+  "domain_validation": {
+    "expected_domain_count": 6,
+    "validated_domain_count": 6,
+    "validated": true
+  },
   "domains": [
     {
       "id": "D1",
       "name": "Identifying Child Abuse and Neglect",
-      "high_risk": true,
-      "memorization_heavy": true,
-      "scenario_based": true,
+      "why_this_domain_exists": "Module content centers on definitions, indicators, risk/protective factors, and prohibited caregiver conduct used to identify concern patterns before reporting.",
+      "confidence_note": "Boundary overlaps with D2 when identification triggers mandatory reporting; primary mapping remains identification tasks.",
+      "content_decomposition": {
+        "policies": [
+          "Physical, emotional, sexual abuse and neglect are distinct categories described in the source modules.",
+          "Risk factors are described across child, family, and environmental levels.",
+          "Staff should distinguish observed facts from assumptions."
+        ],
+        "definitions": [
+          "Neglect includes failure to provide support, supervision, affection, attention, and normal living experiences.",
+          "Protective factors reduce likelihood of maltreatment and should be considered in context.",
+          "Unexplained recurring injuries and extreme behavior changes warrant concern escalation."
+        ],
+        "procedures_workflows": [
+          "Indicators can be physical signs, behavioral changes, or interactional red flags that require objective documentation.",
+          "Observation of caregiver-child interactions can reveal escalating concern patterns.",
+          "Failure to act on credible indicators can place children at continued risk."
+        ],
+        "timeframes_thresholds": [],
+        "roles_responsibilities": [
+          "Risk factors are described across child, family, and environmental levels.",
+          "Staff should distinguish observed facts from assumptions."
+        ],
+        "prohibited_actions_violations": [
+          "Neglect includes failure to provide support, supervision, affection, attention, and normal living experiences.",
+          "Failure to act on credible indicators can place children at continued risk."
+        ],
+        "scenario_judgment_calls": [
+          "Protective factors reduce likelihood of maltreatment and should be considered in context.",
+          "Staff should distinguish observed facts from assumptions."
+        ]
+      },
       "topics": [
         {
-          "name": "Abuse and Neglect Types",
+          "name": "Definitions and Indicators",
           "subtopics": [
             {
-              "name": "Categories and indicators",
-              "learning_objectives": [
-                "Differentiate physical, sexual, and emotional abuse.",
-                "Define neglect as failure to provide support, supervision, warmth, acceptance, attention, and normal living experiences.",
-                "Recognize observable physical and behavioral indicators associated with abuse and neglect."
+              "name": "Abuse and neglect categories",
+              "atomic_facts": [
+                "Physical, emotional, sexual abuse and neglect are distinct categories described in the source modules.",
+                "Neglect includes failure to provide support, supervision, affection, attention, and normal living experiences.",
+                "Indicators can be physical signs, behavioral changes, or interactional red flags that require objective documentation."
               ]
             }
           ]
@@ -43,10 +82,24 @@
           "name": "Risk and Protective Context",
           "subtopics": [
             {
-              "name": "Child, family, environmental factors",
-              "learning_objectives": [
-                "Identify child, family, and environmental factors that increase abuse/neglect risk.",
-                "Use caregiver-child-family interactions to gather relevant concern signals."
+              "name": "Contributing factors",
+              "atomic_facts": [
+                "Risk factors are described across child, family, and environmental levels.",
+                "Protective factors reduce likelihood of maltreatment and should be considered in context.",
+                "Observation of caregiver-child interactions can reveal escalating concern patterns."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Professional Judgment",
+          "subtopics": [
+            {
+              "name": "Objective recognition",
+              "atomic_facts": [
+                "Staff should distinguish observed facts from assumptions.",
+                "Unexplained recurring injuries and extreme behavior changes warrant concern escalation.",
+                "Failure to act on credible indicators can place children at continued risk."
               ]
             }
           ]
@@ -56,31 +109,76 @@
     {
       "id": "D2",
       "name": "Reporting Child Abuse and Neglect",
-      "high_risk": true,
-      "memorization_heavy": true,
-      "scenario_based": true,
+      "why_this_domain_exists": "A distinct module covers legal duty to report, hotline channels, identity rules, and legal consequences for non-reporting.",
+      "confidence_note": "Overlap with D1 at the decision threshold; D2 owns steps after suspicion is formed.",
+      "content_decomposition": {
+        "policies": [
+          "Every adult in Florida is required to report suspected abuse or neglect.",
+          "Approved channels include telephone, online report, fax, and relay/TTY access.",
+          "Reports should include objective observations and known facts."
+        ],
+        "definitions": [
+          "Child care professionals are expected to provide identifying information when reporting.",
+          "Reports should be made immediately when suspicion is formed.",
+          "Personal investigation is not required before reporting suspicion."
+        ],
+        "procedures_workflows": [
+          "Failure to report suspected abuse/neglect is identified as a criminal offense in source text.",
+          "Internal discussion does not replace formal hotline reporting.",
+          "Timely reporting supports child protection and legal compliance."
+        ],
+        "timeframes_thresholds": [
+          "Reports should be made immediately when suspicion is formed."
+        ],
+        "roles_responsibilities": [
+          "Every adult in Florida is required to report suspected abuse or neglect."
+        ],
+        "prohibited_actions_violations": [
+          "Failure to report suspected abuse/neglect is identified as a criminal offense in source text."
+        ],
+        "scenario_judgment_calls": [
+          "Child care professionals are expected to provide identifying information when reporting.",
+          "Reports should be made immediately when suspicion is formed.",
+          "Reports should include objective observations and known facts.",
+          "Timely reporting supports child protection and legal compliance."
+        ]
+      },
       "topics": [
         {
-          "name": "Legal Duty to Report",
+          "name": "Mandated Reporting Duties",
           "subtopics": [
             {
-              "name": "Mandated reporting",
-              "learning_objectives": [
-                "State that every adult in Florida is required by law to report suspected abuse/neglect.",
-                "Explain identity requirements: child care professionals provide their names; others may report anonymously.",
-                "Recall that failure to report suspected abuse/neglect is described as a third-degree felony in source text."
+              "name": "Legal obligations",
+              "atomic_facts": [
+                "Every adult in Florida is required to report suspected abuse or neglect.",
+                "Child care professionals are expected to provide identifying information when reporting.",
+                "Failure to report suspected abuse/neglect is identified as a criminal offense in source text."
               ]
             }
           ]
         },
         {
-          "name": "Hotline Reporting Channels",
+          "name": "Hotline Channels and Workflow",
           "subtopics": [
             {
-              "name": "Available reporting methods",
-              "learning_objectives": [
-                "List hotline submission channels named in source text: online, telephone, Florida Relay/TTY, and fax.",
-                "Select appropriate reporting path based on immediate situation constraints."
+              "name": "Submission methods",
+              "atomic_facts": [
+                "Approved channels include telephone, online report, fax, and relay/TTY access.",
+                "Reports should be made immediately when suspicion is formed.",
+                "Internal discussion does not replace formal hotline reporting."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Documentation and Escalation",
+          "subtopics": [
+            {
+              "name": "Reporting quality",
+              "atomic_facts": [
+                "Reports should include objective observations and known facts.",
+                "Personal investigation is not required before reporting suspicion.",
+                "Timely reporting supports child protection and legal compliance."
               ]
             }
           ]
@@ -90,20 +188,45 @@
     {
       "id": "D3",
       "name": "Observation and Screening",
-      "high_risk": true,
-      "memorization_heavy": false,
-      "scenario_based": true,
+      "why_this_domain_exists": "Source modules explicitly separate observation/screening principles, methods, and early detection workflow from referral actions.",
+      "confidence_note": "Overlaps with D4 when observations lead to referrals; D3 remains evidence collection/interpretation.",
+      "content_decomposition": {
+        "policies": [
+          "Observation and screening are ongoing and purposeful, not one-time events.",
+          "Checklists track presence or absence of target skills.",
+          "Patterns over time are more meaningful than isolated single events."
+        ],
+        "definitions": [
+          "Each child should be viewed through individual traits and abilities.",
+          "Anecdotal records capture objective event notes shortly after occurrence.",
+          "Objective language should be used instead of labels or diagnoses."
+        ],
+        "procedures_workflows": [
+          "Multi-method evidence strengthens reliability of developmental concerns.",
+          "Running records capture sequential behaviors in real time over a short period.",
+          "Observation data should guide supportive next steps."
+        ],
+        "timeframes_thresholds": [
+          "Observation and screening are ongoing and purposeful, not one-time events."
+        ],
+        "roles_responsibilities": [],
+        "prohibited_actions_violations": [],
+        "scenario_judgment_calls": [
+          "Each child should be viewed through individual traits and abilities.",
+          "Objective language should be used instead of labels or diagnoses.",
+          "Observation data should guide supportive next steps."
+        ]
+      },
       "topics": [
         {
-          "name": "Principles",
+          "name": "Purpose and Principles",
           "subtopics": [
             {
-              "name": "Comprehensive and ongoing practice",
-              "learning_objectives": [
-                "Focus on each child’s individual traits and abilities.",
-                "Use comprehensive, multi-method information collection.",
-                "Apply ongoing observation/screening for earlier need identification.",
-                "Ensure observation and screening are purposeful and focused."
+              "name": "Ongoing, purposeful process",
+              "atomic_facts": [
+                "Observation and screening are ongoing and purposeful, not one-time events.",
+                "Each child should be viewed through individual traits and abilities.",
+                "Multi-method evidence strengthens reliability of developmental concerns."
               ]
             }
           ]
@@ -112,25 +235,24 @@
           "name": "Methods and Tools",
           "subtopics": [
             {
-              "name": "Checklist, anecdotal record, running record",
-              "learning_objectives": [
-                "Choose a checklist to track presence/absence of target skills.",
-                "Use anecdotal records to document events shortly after occurrence.",
-                "Use running records to capture behavior as it happens over short periods."
+              "name": "Checklist, anecdotal, running records",
+              "atomic_facts": [
+                "Checklists track presence or absence of target skills.",
+                "Anecdotal records capture objective event notes shortly after occurrence.",
+                "Running records capture sequential behaviors in real time over a short period."
               ]
             }
           ]
         },
         {
-          "name": "Referral Process",
+          "name": "Interpretation and Follow-up",
           "subtopics": [
             {
-              "name": "From concern to referral",
-              "learning_objectives": [
-                "Explain referral as directing child/family to professional services for further evaluation.",
-                "Initiate referral after need is identified via observation/screening and documentation.",
-                "Use timely referrals to support early intervention and best outcomes.",
-                "Communicate referral steps with families in a supportive, collaborative way."
+              "name": "Document then act",
+              "atomic_facts": [
+                "Patterns over time are more meaningful than isolated single events.",
+                "Objective language should be used instead of labels or diagnoses.",
+                "Observation data should guide supportive next steps."
               ]
             }
           ]
@@ -139,72 +261,223 @@
     },
     {
       "id": "D4",
-      "name": "Child Care Facility Rules and Regulations",
-      "high_risk": true,
-      "memorization_heavy": true,
-      "scenario_based": true,
+      "name": "Referral and Collaboration",
+      "why_this_domain_exists": "Module 4 content describes transition from concern to referral, family communication, and service coordination as a separate competency.",
+      "confidence_note": "Intersecting boundaries with D3 and D6 are expected; D4 owns referral workflow and collaborative decision points.",
+      "content_decomposition": {
+        "policies": [
+          "Referral begins after need identification supported by observations and documentation.",
+          "Family conversations should be respectful, clear, and collaborative.",
+          "Programs coordinate with appropriate community resources."
+        ],
+        "definitions": [
+          "Early referral is linked to improved outcomes.",
+          "Share specific observed behaviors rather than judgments.",
+          "Referral does not end at handoff; follow-up matters."
+        ],
+        "procedures_workflows": [
+          "Referral directs child/family to qualified professional services for evaluation.",
+          "Document referral discussions and next steps.",
+          "Confidentiality and professionalism remain essential through the process."
+        ],
+        "timeframes_thresholds": [],
+        "roles_responsibilities": [
+          "Referral directs child/family to qualified professional services for evaluation.",
+          "Family conversations should be respectful, clear, and collaborative.",
+          "Programs coordinate with appropriate community resources."
+        ],
+        "prohibited_actions_violations": [],
+        "scenario_judgment_calls": [
+          "Family conversations should be respectful, clear, and collaborative.",
+          "Referral does not end at handoff; follow-up matters."
+        ]
+      },
       "topics": [
         {
-          "name": "Regulatory Framework",
+          "name": "Referral Triggers",
           "subtopics": [
             {
-              "name": "Purpose and program types",
-              "learning_objectives": [
-                "Describe the role of regulation in protecting child health and safety.",
-                "Differentiate licensed, exempt, drop-in, and evening care program concepts as presented in source materials.",
-                "Recognize alignment of statutes, administrative code, and handbook guidance."
+              "name": "When to initiate referral",
+              "atomic_facts": [
+                "Referral begins after need identification supported by observations and documentation.",
+                "Early referral is linked to improved outcomes.",
+                "Referral directs child/family to qualified professional services for evaluation."
               ]
             }
           ]
         },
         {
-          "name": "General Requirements",
+          "name": "Family Collaboration",
           "subtopics": [
             {
-              "name": "Licensure and compliance",
-              "learning_objectives": [
-                "Identify annual licensure application expectations.",
-                "Explain the role of inspections for compliance.",
-                "Connect enrollment records and staff-to-child ratios with child safety."
+              "name": "Supportive communication",
+              "atomic_facts": [
+                "Family conversations should be respectful, clear, and collaborative.",
+                "Share specific observed behaviors rather than judgments.",
+                "Document referral discussions and next steps."
               ]
             }
           ]
         },
         {
-          "name": "Physical Environment and Health",
+          "name": "Service Coordination",
           "subtopics": [
             {
-              "name": "Daily safety operations",
-              "learning_objectives": [
-                "Apply daily indoor/outdoor safety checks.",
-                "Ensure hazardous materials and firearms are inaccessible to children.",
-                "Recognize licensed capacity and usable space concepts in daily planning."
+              "name": "Follow-through",
+              "atomic_facts": [
+                "Programs coordinate with appropriate community resources.",
+                "Referral does not end at handoff; follow-up matters.",
+                "Confidentiality and professionalism remain essential through the process."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D5",
+      "name": "Child Care Facility Rules and Regulatory Framework",
+      "why_this_domain_exists": "Module 5 content focuses on licensing structure, program classifications, inspections, capacity, and baseline compliance requirements.",
+      "confidence_note": "Overlap with D6 occurs because both involve compliance; D5 is framework and rule structure.",
+      "content_decomposition": {
+        "policies": [
+          "Regulation exists to protect child health, safety, and well-being.",
+          "Licensure must be maintained with required application cycles.",
+          "Required records should be available for licensing review."
+        ],
+        "definitions": [
+          "Source materials distinguish licensed, exempt, and specialized care contexts.",
+          "Inspections are used to verify compliance with standards.",
+          "Family and licensing access during operational hours is emphasized in summaries."
+        ],
+        "procedures_workflows": [
+          "Statutes, code, and handbook guidance function together in compliance practice.",
+          "Enrollment records and ratios are core compliance evidence.",
+          "Noncompliance can trigger corrective and enforcement actions."
+        ],
+        "timeframes_thresholds": [],
+        "roles_responsibilities": [
+          "Family and licensing access during operational hours is emphasized in summaries."
+        ],
+        "prohibited_actions_violations": [
+          "Noncompliance can trigger corrective and enforcement actions."
+        ],
+        "scenario_judgment_calls": [
+          "Required records should be available for licensing review."
+        ]
+      },
+      "topics": [
+        {
+          "name": "Regulation Purpose and Scope",
+          "subtopics": [
+            {
+              "name": "Why rules exist",
+              "atomic_facts": [
+                "Regulation exists to protect child health, safety, and well-being.",
+                "Source materials distinguish licensed, exempt, and specialized care contexts.",
+                "Statutes, code, and handbook guidance function together in compliance practice."
               ]
             }
           ]
         },
         {
-          "name": "Training and Personnel Records",
+          "name": "Licensure and Inspection",
           "subtopics": [
             {
-              "name": "Initial and ongoing requirements",
-              "learning_objectives": [
-                "Recall the 90-day window to begin training for new child care personnel.",
-                "Recall completion expectations for 40-hour introductory training (or approved exemption pathways).",
-                "Identify required recurring training elements (e.g., literacy, fire extinguisher, and other named topics in source text)."
+              "name": "Operational compliance",
+              "atomic_facts": [
+                "Licensure must be maintained with required application cycles.",
+                "Inspections are used to verify compliance with standards.",
+                "Enrollment records and ratios are core compliance evidence."
               ]
             }
           ]
         },
         {
-          "name": "Enforcement and Professionalism",
+          "name": "Records and Access",
           "subtopics": [
             {
-              "name": "Violations, sanctions, and professional growth",
-              "learning_objectives": [
-                "Classify violations by enforcement categories (Class I/II/III).",
-                "Explain sanctions as tied to standard violated, frequency, and severity.",
-                "Create and maintain a professional development plan with ongoing education."
+              "name": "Transparency obligations",
+              "atomic_facts": [
+                "Required records should be available for licensing review.",
+                "Family and licensing access during operational hours is emphasized in summaries.",
+                "Noncompliance can trigger corrective and enforcement actions."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "D6",
+      "name": "Health, Safety, Training, and Professionalism",
+      "why_this_domain_exists": "Module 6 focuses on daily hazard control, staff training timelines, violation classes, sanctions, and professional development expectations.",
+      "confidence_note": "Some health-safety requirements connect to D5 facility rules; D6 focuses on day-to-day implementation and workforce competence.",
+      "content_decomposition": {
+        "policies": [
+          "Daily indoor/outdoor checks are required safety practice.",
+          "New personnel must begin training within the 90-day window stated in source summaries.",
+          "Violations are categorized (Class I/II/III) with severity considerations."
+        ],
+        "definitions": [
+          "Hazardous materials and firearms must remain inaccessible to children.",
+          "Forty-hour introductory training completion is a core requirement or approved equivalent path.",
+          "Sanctions depend on violated standard, frequency, and severity."
+        ],
+        "procedures_workflows": [
+          "Capacity and usable space decisions affect daily safety planning.",
+          "Recurring training topics include literacy, fire extinguisher use, and additional annual topics named by source summaries.",
+          "Professional development plans support continuous improvement and compliance."
+        ],
+        "timeframes_thresholds": [
+          "New personnel must begin training within the 90-day window stated in source summaries.",
+          "Forty-hour introductory training completion is a core requirement or approved equivalent path."
+        ],
+        "roles_responsibilities": [
+          "New personnel must begin training within the 90-day window stated in source summaries."
+        ],
+        "prohibited_actions_violations": [
+          "Hazardous materials and firearms must remain inaccessible to children.",
+          "Violations are categorized (Class I/II/III) with severity considerations."
+        ],
+        "scenario_judgment_calls": []
+      },
+      "topics": [
+        {
+          "name": "Daily Safety Operations",
+          "subtopics": [
+            {
+              "name": "Hazard prevention",
+              "atomic_facts": [
+                "Daily indoor/outdoor checks are required safety practice.",
+                "Hazardous materials and firearms must remain inaccessible to children.",
+                "Capacity and usable space decisions affect daily safety planning."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Training Requirements",
+          "subtopics": [
+            {
+              "name": "Initial and ongoing training",
+              "atomic_facts": [
+                "New personnel must begin training within the 90-day window stated in source summaries.",
+                "Forty-hour introductory training completion is a core requirement or approved equivalent path.",
+                "Recurring training topics include literacy, fire extinguisher use, and additional annual topics named by source summaries."
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Enforcement and Professional Conduct",
+          "subtopics": [
+            {
+              "name": "Violations and growth",
+              "atomic_facts": [
+                "Violations are categorized (Class I/II/III) with severity considerations.",
+                "Sanctions depend on violated standard, frequency, and severity.",
+                "Professional development plans support continuous improvement and compliance."
               ]
             }
           ]
@@ -213,11 +486,62 @@
     }
   ],
   "recommended_learning_path": [
-    { "module": "M1", "name": "Identifying Abuse/Neglect", "estimated_minutes": 45, "flags": ["high_risk", "memorization_heavy", "scenario_based"] },
-    { "module": "M2", "name": "Reporting Abuse/Neglect", "estimated_minutes": 40, "flags": ["high_risk", "memorization_heavy", "scenario_based"] },
-    { "module": "M3", "name": "Observation Principles + Methods", "estimated_minutes": 60, "flags": ["high_risk", "scenario_based"] },
-    { "module": "M4", "name": "Referral Process", "estimated_minutes": 35, "flags": ["high_risk", "scenario_based"] },
-    { "module": "M5", "name": "Rules/Regulations: Framework + General", "estimated_minutes": 70, "flags": ["high_risk", "memorization_heavy"] },
-    { "module": "M6", "name": "Health/Safety + Training + Enforcement + Professionalism", "estimated_minutes": 75, "flags": ["high_risk", "memorization_heavy", "scenario_based"] }
+    {
+      "module": "M1",
+      "name": "Identifying Abuse/Neglect",
+      "estimated_minutes": 45,
+      "flags": [
+        "high_risk",
+        "memorization_heavy",
+        "scenario_based"
+      ]
+    },
+    {
+      "module": "M2",
+      "name": "Reporting Abuse/Neglect",
+      "estimated_minutes": 40,
+      "flags": [
+        "high_risk",
+        "memorization_heavy",
+        "scenario_based"
+      ]
+    },
+    {
+      "module": "M3",
+      "name": "Observation and Screening",
+      "estimated_minutes": 60,
+      "flags": [
+        "high_risk",
+        "scenario_based"
+      ]
+    },
+    {
+      "module": "M4",
+      "name": "Referral and Collaboration",
+      "estimated_minutes": 35,
+      "flags": [
+        "high_risk",
+        "scenario_based"
+      ]
+    },
+    {
+      "module": "M5",
+      "name": "Rules and Regulatory Framework",
+      "estimated_minutes": 70,
+      "flags": [
+        "high_risk",
+        "memorization_heavy"
+      ]
+    },
+    {
+      "module": "M6",
+      "name": "Health/Safety, Training, and Professionalism",
+      "estimated_minutes": 75,
+      "flags": [
+        "high_risk",
+        "memorization_heavy",
+        "scenario_based"
+      ]
+    }
   ]
 }

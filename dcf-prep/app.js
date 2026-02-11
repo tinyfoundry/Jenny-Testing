@@ -10,7 +10,7 @@ const state = {
 };
 
 const STORAGE_KEY = "dcfPrepV1";
-const defaultProgress = { completedModules: {}, domainAccuracy: {}, weakDomains: [], examHistory: [], totalAnswered: 0, totalCorrect: 0 };
+const defaultProgress = { completedModules: {}, domainAccuracy: {}, weakDomains: [], examHistory: [], totalAnswered: 0, totalCorrect: 0, recentPracticeIds: [], recentExamIds: [] };
 
 const $ = (id) => document.getElementById(id);
 const views = ["dashboard","modules","practice","exam","adaptive","quiz","results"];
@@ -111,6 +111,51 @@ function renderModules() {
   });
 }
 
+
+function dedupeQuestionPool(pool) {
+  const seen = new Set();
+  return pool.filter(q => {
+    const key = q.id || `${q.domain}|${q.prompt}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function takeNonRepeating(pool, count, recentIds = []) {
+  const recent = new Set(recentIds || []);
+  const fresh = pool.filter(q => !recent.has(q.id));
+  const fallback = pool.filter(q => recent.has(q.id));
+  const source = fresh.length >= count ? fresh : [...fresh, ...fallback];
+  return shuffle(source).slice(0, Math.min(count, source.length));
+}
+
+function encouragementMessage(score, mode) {
+  if (score >= 90) return `Outstanding work${mode === "exam" ? " under exam conditions" : ""}! You are building strong mastery.`;
+  if (score >= 80) return "Great momentum—your consistency is paying off. Keep practicing to lock in speed and accuracy.";
+  if (score >= 70) return "Nice progress. You are close to strong readiness—focus on a few weaker domains next.";
+  if (score >= 60) return "Good effort and growth mindset. Targeted practice in weak domains will boost your next score.";
+  return "Thanks for sticking with it—every session builds skill. Focus on weak domains and try another short round.";
+}
+
+function buildFocusRecommendations(byDomain) {
+  const rows = Object.entries(byDomain).map(([d, x]) => ({
+    domain: d,
+    pct: Math.round((x.correct / x.total) * 100),
+  })).sort((a, b) => a.pct - b.pct);
+
+  if (!rows.length) return "Keep practicing across all domains to build a fuller readiness profile.";
+  const targets = rows.slice(0, Math.min(2, rows.length));
+  const top = rows[rows.length - 1];
+  return `Focus next on ${targets.map(t => `${t.domain} (${t.pct}%)`).join(" and ")}. Keep confidence high by mixing in ${top.domain} (${top.pct}%) as a strength-maintenance domain.`;
+}
+
+function ambiguityTipForQuestion(q) {
+  const ambiguous = /scenario|best|most|first/i.test(q.prompt || "") || (q.tags || []).some(t => /integrated|advanced/i.test(t));
+  if (!ambiguous) return "";
+  return `<p class="small"><strong>Ambiguity tip:</strong> When options seem close, choose the one that protects safety first, follows required workflow, and uses objective documentation.</p>`;
+}
+
 function renderPracticeDomains() {
   const select = $("practiceDomain");
   select.innerHTML = `<option value="ALL">All Domains</option>`;
@@ -121,7 +166,7 @@ function renderPracticeDomains() {
 }
 
 function pickQuestions({ mode, count, domain }) {
-  let pool = [...state.questionBank];
+  let pool = dedupeQuestionPool([...state.questionBank]);
   if (domain && domain !== "ALL") pool = pool.filter(q => q.domain === domain);
 
   if (mode === "adaptive") {
@@ -135,7 +180,14 @@ function pickQuestions({ mode, count, domain }) {
     });
   } else if (mode === "exam") {
     const domainIds = [...new Set((state.contentMap.domains || []).map(d => d.id).filter(Boolean))];
-    const byDomain = domainIds.map(d => ({ domain: d, questions: shuffle(pool.filter(q => q.domain === d)) }));
+    const p = getProgress();
+    const recentExamSet = new Set(p.recentExamIds || []);
+    const byDomain = domainIds.map(d => {
+      const domainPool = pool.filter(q => q.domain === d);
+      const fresh = shuffle(domainPool.filter(q => !recentExamSet.has(q.id)));
+      const stale = shuffle(domainPool.filter(q => recentExamSet.has(q.id)));
+      return { domain: d, questions: [...fresh, ...stale] };
+    });
     const picked = [];
 
     if (count >= domainIds.length) {
@@ -155,7 +207,9 @@ function pickQuestions({ mode, count, domain }) {
     return shuffle([...new Map(picked.map(q => [q.id, q])).values()]).slice(0, count);
   }
 
-  return shuffle(pool).slice(0, Math.min(count, pool.length));
+  const p = getProgress();
+  const recentIds = mode === "exam" ? p.recentExamIds : p.recentPracticeIds;
+  return takeNonRepeating(pool, count, recentIds);
 }
 
 function startPractice() {
@@ -245,9 +299,11 @@ function submitAnswer() {
       return `<li><strong>${q.choices[i]}</strong>: ${q.whyWrong[i] || "Not aligned with source logic."}</li>`;
     }).join("");
 
+    const plainEnglish = `<p><strong>Plain-English takeaway:</strong> ${q.explanation}</p>`;
     $("feedback").innerHTML = `
       <p class="${correct ? "feedback-ok" : "feedback-no"}"><strong>${correct ? "Correct" : "Incorrect"}</strong></p>
-      <p>${q.explanation}</p>
+      ${plainEnglish}
+      ${ambiguityTipForQuestion(q)}
       <details><summary>Why each option is right/wrong</summary><ul>${wrongDetails}</ul></details>
     `;
   }
@@ -286,7 +342,13 @@ function finishQuiz() {
   });
   p.weakDomains = Object.entries(p.domainAccuracy).filter(([, v]) => v < 70).map(([d]) => d);
 
-  if (state.mode === "exam") p.examHistory.push({ when: new Date().toISOString(), score, byDomain });
+  const sessionIds = qset.map(q => q.id);
+  if (state.mode === "exam") {
+    p.examHistory.push({ when: new Date().toISOString(), score, byDomain });
+    p.recentExamIds = [...new Set([...sessionIds, ...(p.recentExamIds || [])])].slice(0, 180);
+  } else {
+    p.recentPracticeIds = [...new Set([...sessionIds, ...(p.recentPracticeIds || [])])].slice(0, 180);
+  }
   saveProgress(p);
 
   const breakdown = Object.entries(byDomain).map(([d, x]) => `<li>${d}: ${x.correct}/${x.total} (${Math.round((x.correct / x.total) * 100)}%)</li>`).join("");
@@ -296,8 +358,12 @@ function finishQuiz() {
     return `<li><strong>Q${i+1}:</strong> ${q.prompt}<br/><span class='${ok ? "feedback-ok" : "feedback-no"}'>${ok ? "Correct" : "Incorrect"}</span> • Correct: ${q.correctAnswers.map(i=>q.choices[i]).join(", ")}</li>`;
   }).join("");
 
+  const encouragement = encouragementMessage(score, state.mode);
+  const recommendations = buildFocusRecommendations(byDomain);
   $("resultsBody").innerHTML = `
     <p><strong>Score:</strong> ${score}% (${correct}/${qset.length})</p>
+    <p class="feedback-ok"><strong>${encouragement}</strong></p>
+    <p><strong>Recommended focus:</strong> ${recommendations}</p>
     <h3>Domain Breakdown</h3><ul>${breakdown}</ul>
     <h3>Review</h3><ol>${review}</ol>
   `;

@@ -103,7 +103,7 @@ function renderOverview() {
 }
 
 function mapModuleToDomain(moduleId) {
-  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
+  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D4", M5: "D5", M6: "D6" };
   return domainMap[moduleId] || "D1";
 }
 
@@ -115,10 +115,24 @@ function buildModuleBlueprint(moduleId) {
     topic.subtopics.map(sub => ({
       topic: topic.name,
       subtopic: sub.name,
-      objectives: sub.learning_objectives,
+      objectives: sub.learning_objectives || sub.atomic_facts || [],
       description: `Focus: ${topic.name} → ${sub.name}`,
     }))
   );
+
+  if (!units.length) {
+    return Array.from({ length: 10 }).map((_, i) => ({
+      levelNum: i + 1,
+      title: `Level ${i + 1}`,
+      description: `Core review: ${domain?.name || "Domain"}`,
+      units: [{
+        topic: domain?.name || "Domain",
+        subtopic: "Core concepts",
+        objectives: ["Apply required concepts using objective documentation and timely action."],
+        description: `Core review: ${domain?.name || "Domain"}`,
+      }],
+    }));
+  }
 
   const levels = [];
   for (let i = 0; i < 10; i++) {
@@ -359,12 +373,25 @@ function pickQuestions({ mode, count, domain }) {
       return (aw - bw) || (diffRank[b.difficulty] - diffRank[a.difficulty]);
     });
   } else if (mode === "exam") {
-    const weights = { D1: 0.2, D2: 0.2, D3: 0.25, D4: 0.35 };
+    const domainIds = [...new Set((state.contentMap.domains || []).map(d => d.id).filter(Boolean))];
+    const byDomain = domainIds.map(d => ({ domain: d, questions: shuffle(pool.filter(q => q.domain === d)) }));
     const picked = [];
-    Object.entries(weights).forEach(([d, w]) => {
-      const target = Math.max(1, Math.round(count * w));
-      picked.push(...shuffle(pool.filter(q => q.domain === d)).slice(0, target));
-    });
+
+    // Guarantee six-domain (or all available domain) coverage when possible.
+    if (count >= domainIds.length) {
+      byDomain.forEach(({ questions }) => {
+        if (questions.length) picked.push(questions.shift());
+      });
+    }
+
+    let i = 0;
+    while (picked.length < count) {
+      const bucket = byDomain[i % byDomain.length];
+      if (bucket?.questions?.length) picked.push(bucket.questions.shift());
+      i += 1;
+      if (i > count * 20) break;
+    }
+
     return shuffle([...new Map(picked.map(q => [q.id, q])).values()]).slice(0, count);
   }
 

@@ -19,6 +19,8 @@ const defaultProgress = {
   examHistory: [],
   totalAnswered: 0,
   totalCorrect: 0,
+  recentPracticeIds: [],
+  recentExamIds: [],
 };
 
 const $ = (id) => document.getElementById(id);
@@ -102,8 +104,54 @@ function renderOverview() {
   `;
 }
 
+
+function dedupeQuestionPool(pool) {
+  const seen = new Set();
+  return pool.filter(q => {
+    const key = q.id || `${q.domain}|${q.prompt}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function takeNonRepeating(pool, count, recentIds = []) {
+  const recent = new Set(recentIds || []);
+  const fresh = pool.filter(q => !recent.has(q.id));
+  const fallback = pool.filter(q => recent.has(q.id));
+  const source = fresh.length >= count ? fresh : [...fresh, ...fallback];
+  return shuffle(source).slice(0, Math.min(count, source.length));
+}
+
+function encouragementMessage(score, mode) {
+  if (score >= 90) return `Outstanding work${mode === "exam" ? " under exam conditions" : ""}! You are building strong mastery.`;
+  if (score >= 80) return "Great momentum—your consistency is paying off. Keep practicing to lock in speed and accuracy.";
+  if (score >= 70) return "Nice progress. You are close to strong readiness—focus on a few weaker domains next.";
+  if (score >= 60) return "Good effort and growth mindset. Targeted practice in weak domains will boost your next score.";
+  return "Thanks for sticking with it—every session builds skill. Focus on weak domains and try another short round.";
+}
+
+function buildFocusRecommendations(byDomain) {
+  const rows = Object.entries(byDomain).map(([d, x]) => ({
+    domain: d,
+    pct: Math.round((x.correct / x.total) * 100),
+    total: x.total,
+  })).sort((a, b) => a.pct - b.pct);
+
+  if (!rows.length) return "Keep practicing across all domains to build a fuller readiness profile.";
+  const targets = rows.slice(0, Math.min(2, rows.length));
+  const top = rows[rows.length - 1];
+  return `Focus next on ${targets.map(t => `${t.domain} (${t.pct}%)`).join(" and ")}. Keep confidence high by mixing in ${top.domain} (${top.pct}%) as a strength-maintenance domain.`;
+}
+
+function ambiguityTipForQuestion(q) {
+  const ambiguous = /scenario|best|most|first/i.test(q.prompt || "") || (q.tags || []).some(t => /integrated|advanced/i.test(t));
+  if (!ambiguous) return "";
+  return `<p class="small"><strong>Ambiguity tip:</strong> When options seem close, choose the one that protects safety first, follows required workflow, and uses objective documentation.</p>`;
+}
+
 function mapModuleToDomain(moduleId) {
-  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D3", M5: "D4", M6: "D4" };
+  const domainMap = { M1: "D1", M2: "D2", M3: "D3", M4: "D4", M5: "D5", M6: "D6" };
   return domainMap[moduleId] || "D1";
 }
 
@@ -115,10 +163,24 @@ function buildModuleBlueprint(moduleId) {
     topic.subtopics.map(sub => ({
       topic: topic.name,
       subtopic: sub.name,
-      objectives: sub.learning_objectives,
+      objectives: sub.learning_objectives || sub.atomic_facts || [],
       description: `Focus: ${topic.name} → ${sub.name}`,
     }))
   );
+
+  if (!units.length) {
+    return Array.from({ length: 10 }).map((_, i) => ({
+      levelNum: i + 1,
+      title: `Level ${i + 1}`,
+      description: `Core review: ${domain?.name || "Domain"}`,
+      units: [{
+        topic: domain?.name || "Domain",
+        subtopic: "Core concepts",
+        objectives: ["Apply required concepts using objective documentation and timely action."],
+        description: `Core review: ${domain?.name || "Domain"}`,
+      }],
+    }));
+  }
 
   const levels = [];
   for (let i = 0; i < 10; i++) {
@@ -158,28 +220,39 @@ function exampleFromObjective(objective) {
 function createLevelDeck(moduleId, levelNum) {
   const blueprint = buildModuleBlueprint(moduleId);
   const level = blueprint[levelNum - 1];
-  const objectivePool = level.units.flatMap(u => u.objectives.map(o => ({ ...u, objective: o })));
+  const objectivePool = level.units.flatMap(u => (u.objectives || []).map(o => ({ ...u, objective: o })));
+  const uniqueObjectivePool = [...new Map(objectivePool.map(o => [`${o.topic}|${o.subtopic}|${o.objective}`, o])).values()];
 
-  const cardCount = Math.min(8, Math.max(5, objectivePool.length * 2));
+  const seedPool = uniqueObjectivePool.length ? uniqueObjectivePool : [{
+    topic: level.title,
+    subtopic: "Core concepts",
+    objective: "Apply objective documentation and timely action in this focus area.",
+  }];
+
+  const cardCount = Math.min(8, Math.max(5, seedPool.length));
   const cards = Array.from({ length: cardCount }).map((_, i) => {
-    const obj = objectivePool[i % objectivePool.length];
+    const obj = seedPool[i % seedPool.length];
+    const suffix = i >= seedPool.length ? ` (review angle ${i - seedPool.length + 1})` : "";
+    const frontBody = `${obj.objective}${suffix}`;
     return {
       title: `${obj.topic} • ${obj.subtopic}`,
-      frontBody: obj.objective,
+      frontBody,
       backTitle: "Example in practice",
       backBody: exampleFromObjective(obj.objective),
     };
   });
 
+  const uniqueChoicePool = [...new Set(cards.map(c => c.frontBody))];
   const quiz = cards.map((card, i) => {
-    const d1 = cards[(i + 1) % cards.length].frontBody;
-    const d2 = cards[(i + 2) % cards.length].frontBody;
-    const d3 = cards[(i + 3) % cards.length].frontBody;
-    const choices = shuffle([card.frontBody, d1, d2, d3]);
+    const distractors = shuffle(uniqueChoicePool.filter(x => x !== card.frontBody)).slice(0, 3);
+    let choices = [card.frontBody, ...distractors];
+    while (choices.length < 4) choices.push(`Review expectation ${choices.length}: apply objective and timely action.`);
+    choices = [...new Set(choices)].slice(0, 4);
+    const shuffledChoices = shuffle(choices);
     return {
-      prompt: `Which definition best matches this focus area: ${card.title}?`,
-      choices,
-      correctIndex: choices.indexOf(card.frontBody),
+      prompt: `Which definition best matches this focus area: ${card.title}? (Item ${i + 1})`,
+      choices: shuffledChoices,
+      correctIndex: shuffledChoices.indexOf(card.frontBody),
     };
   });
 
@@ -346,7 +419,7 @@ function renderPracticeDomains() {
 }
 
 function pickQuestions({ mode, count, domain }) {
-  let pool = [...state.questionBank];
+  let pool = dedupeQuestionPool([...state.questionBank]);
   if (domain && domain !== "ALL") pool = pool.filter(q => q.domain === domain);
 
   if (mode === "adaptive") {
@@ -359,16 +432,38 @@ function pickQuestions({ mode, count, domain }) {
       return (aw - bw) || (diffRank[b.difficulty] - diffRank[a.difficulty]);
     });
   } else if (mode === "exam") {
-    const weights = { D1: 0.2, D2: 0.2, D3: 0.25, D4: 0.35 };
-    const picked = [];
-    Object.entries(weights).forEach(([d, w]) => {
-      const target = Math.max(1, Math.round(count * w));
-      picked.push(...shuffle(pool.filter(q => q.domain === d)).slice(0, target));
+    const domainIds = [...new Set((state.contentMap.domains || []).map(d => d.id).filter(Boolean))];
+    const p = getProgress();
+    const recentExamSet = new Set(p.recentExamIds || []);
+    const byDomain = domainIds.map(d => {
+      const domainPool = pool.filter(q => q.domain === d);
+      const fresh = shuffle(domainPool.filter(q => !recentExamSet.has(q.id)));
+      const stale = shuffle(domainPool.filter(q => recentExamSet.has(q.id)));
+      return { domain: d, questions: [...fresh, ...stale] };
     });
+    const picked = [];
+
+    // Guarantee six-domain (or all available domain) coverage when possible.
+    if (count >= domainIds.length) {
+      byDomain.forEach(({ questions }) => {
+        if (questions.length) picked.push(questions.shift());
+      });
+    }
+
+    let i = 0;
+    while (picked.length < count) {
+      const bucket = byDomain[i % byDomain.length];
+      if (bucket?.questions?.length) picked.push(bucket.questions.shift());
+      i += 1;
+      if (i > count * 20) break;
+    }
+
     return shuffle([...new Map(picked.map(q => [q.id, q])).values()]).slice(0, count);
   }
 
-  return shuffle(pool).slice(0, Math.min(count, pool.length));
+  const p = getProgress();
+  const recentIds = mode === "exam" ? p.recentExamIds : p.recentPracticeIds;
+  return takeNonRepeating(pool, count, recentIds);
 }
 
 function startPractice() {
@@ -463,9 +558,11 @@ function submitAnswer() {
     return `<li><strong>${q.choices[i]}</strong>: ${q.whyWrong[i] || "Not aligned with source logic."}</li>`;
   }).join("");
 
+  const plainEnglish = `<p><strong>Plain-English takeaway:</strong> ${q.explanation}</p>`;
   $("feedback").innerHTML = `
     <p class="${correct ? "feedback-ok" : "feedback-no"}"><strong>${correct ? "Correct" : "Incorrect"}</strong></p>
-    <p>${q.explanation}</p>
+    ${plainEnglish}
+    ${ambiguityTipForQuestion(q)}
     <ul>${wrongDetails}</ul>
   `;
 
@@ -502,7 +599,13 @@ function finishQuiz() {
   });
   p.weakDomains = Object.entries(p.domainAccuracy).filter(([, v]) => v < 70).map(([d]) => d);
 
-  if (state.mode === "exam") p.examHistory.push({ when: new Date().toISOString(), score, byDomain });
+  const sessionIds = qset.map(q => q.id);
+  if (state.mode === "exam") {
+    p.examHistory.push({ when: new Date().toISOString(), score, byDomain });
+    p.recentExamIds = [...new Set([...sessionIds, ...(p.recentExamIds || [])])].slice(0, 180);
+  } else {
+    p.recentPracticeIds = [...new Set([...sessionIds, ...(p.recentPracticeIds || [])])].slice(0, 180);
+  }
   saveProgress(p);
 
   const breakdown = Object.entries(byDomain).map(([d, x]) => `<li>${d}: ${x.correct}/${x.total} (${Math.round((x.correct / x.total) * 100)}%)</li>`).join("");
@@ -512,8 +615,12 @@ function finishQuiz() {
     return `<li><strong>Q${i+1}:</strong> ${q.prompt}<br/><span class='${ok ? "feedback-ok" : "feedback-no"}'>${ok ? "Correct" : "Incorrect"}</span> • Correct: ${q.correctAnswers.map(i=>q.choices[i]).join(", ")}</li>`;
   }).join("");
 
+  const encouragement = encouragementMessage(score, state.mode);
+  const recommendations = buildFocusRecommendations(byDomain);
   $("resultsBody").innerHTML = `
     <p><strong>Score:</strong> ${score}% (${correct}/${qset.length})</p>
+    <p class="feedback-ok"><strong>${encouragement}</strong></p>
+    <p><strong>Recommended focus:</strong> ${recommendations}</p>
     <h3>Domain Breakdown</h3><ul>${breakdown}</ul>
     <h3>Review</h3><ol>${review}</ol>
   `;
